@@ -6,9 +6,9 @@ public class StageBuilder : MonoBehaviour {
 
     public Material platMat;
 
-    static float flatStageHeight = 15;
+    static float flatStageHeight = 26;
     static float flatStageBottom = -15;
-    static float flatStageWidth = 25;
+    static float flatStageWidth = 30;
 
     public void ConstructFlat()
     {
@@ -16,7 +16,7 @@ public class StageBuilder : MonoBehaviour {
         plat1.tag = "Stage";
         plat1.layer = 10;
         plat1.transform.position = new Vector3(0, -5, 0);
-        plat1.transform.localScale = new Vector3(25, 2, 1);
+        plat1.transform.localScale = new Vector3(30, 2, 1);
         plat1.GetComponent<Renderer>().material = platMat;
 
 

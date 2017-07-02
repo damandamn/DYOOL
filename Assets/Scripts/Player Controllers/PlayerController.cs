@@ -80,7 +80,7 @@ public class PlayerController : MonoBehaviour {
 
     //Character Attributes! These all change from character to character
     float walkSpeed = 0.1F;
-    float traction = 0.006F;
+    float traction = 0.01F;
     float walkAccel = 0.01F;
     float dashAccel = 0.01F;
 
@@ -376,7 +376,7 @@ public class PlayerController : MonoBehaviour {
         }
     }
 
-    //called called every frame when the player is airborn and can act. Handles airborne physics
+    //called every frame when the player is airborn and can act. Handles airborne physics
     void AirControl()
     {
         //directional influence for drifting
@@ -443,6 +443,7 @@ public class PlayerController : MonoBehaviour {
         PreventClipping();
     }
 
+    //called every frame when the player is using an aerial
     void AerialAttackControl()
     {
         //directional influence for drifting
@@ -516,7 +517,7 @@ public class PlayerController : MonoBehaviour {
         //if falling too fast, slow down depending on your speed
         if (knockbackMomentum.y < -maxFallSpeed)
         {
-            knockbackMomentum.y += fallSpeed * (knockbackMomentum.y / -maxFallSpeed);
+            knockbackMomentum.y += (fallSpeed) * (knockbackMomentum.y / -maxFallSpeed);
         }
 
         transform.position += knockbackMomentum;
@@ -538,7 +539,7 @@ public class PlayerController : MonoBehaviour {
         {
             if (knockbackMomentum.x > 0)
             {
-                knockbackMomentum.x -= traction * 2;
+                knockbackMomentum.x -= traction;
                 if (knockbackMomentum.x < 0)
                 {
                     knockbackMomentum.x = 0;
@@ -546,7 +547,7 @@ public class PlayerController : MonoBehaviour {
             }
             else if (knockbackMomentum.x < 0)
             {
-                knockbackMomentum.x += traction * 2;
+                knockbackMomentum.x += traction;
                 if (knockbackMomentum.x > 0)
                 {
                     knockbackMomentum.x = 0;
@@ -557,7 +558,7 @@ public class PlayerController : MonoBehaviour {
     }
 
     //called when hitlag starts, signals end of hitlag
-    public IEnumerator Hitlag(int duration, float knockbackValue, float angle, bool attacker = false)
+    public IEnumerator Hitlag(int duration, float knockbackValue, int hitstun, float angle, bool attacker = false)
     {
         if (frameCancel)
         {
@@ -601,8 +602,8 @@ public class PlayerController : MonoBehaviour {
         else
         {
             //begin launch
-            knockbackMomentum = GameLoader.hitmanager.CalculateLaunch(knockbackValue, angle);
-            hitStunDuration = 20 + ((int)knockbackValue / 2);
+            knockbackMomentum = GameLoader.hitmanager.CalculateLaunch(knockbackValue, angle, fallSpeed);
+            hitStunDuration = hitstun;
 
             inHitstun = false;
             moveState = MoveStates.HITSTUN;
@@ -947,5 +948,5 @@ public class PlayerController : MonoBehaviour {
         }
     }
 
-    //TODO blast zones, Directional Influence, Fix ground movement physics, Wall Collisions, Blocking, 
+    //TODO Directional Influence, Special Moves, More movement options (dash, dodge), Wall Collisions, Ledges, Blocking, 
 }
