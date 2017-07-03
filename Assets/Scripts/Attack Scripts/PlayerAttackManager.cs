@@ -172,6 +172,18 @@ public class PlayerAttackManager : MonoBehaviour {
         }
     }
 
+    public void UseSpecialAttack(PlayerController user)
+    {
+        if (Mathf.Abs(user.hori) < user.horiThreshold && user.vert > user.vertThreshold)
+        {
+            Debug.Log(user.upBUsed);
+            if (user.upBUsed < user.upBAttack.aerialUses) {
+                user.upBUsed++;
+                StartAttack(user, user.upBAttack);
+            }
+        }
+    }
+
     //initiates a specified attack
     void StartAttack(PlayerController user, Attack attack)
     {
@@ -179,6 +191,14 @@ public class PlayerAttackManager : MonoBehaviour {
         if (attack.aerial)
         {
             user.moveState = PlayerController.MoveStates.AERIAL;
+        }
+        else if (attack.special)
+        {
+            user.moveState = PlayerController.MoveStates.SPECIALMOVE;
+            if (attack.cancelAirMomentum)
+            {
+                user.airMomentum = Vector3.zero;
+            }
         }
         else
         {
@@ -204,8 +224,55 @@ public class PlayerAttackManager : MonoBehaviour {
     public void RunAttackFrame(PlayerController user, Attack attack, int frame)
     {
 
-
         MoveFrame attackFrame = attack.frameData[frame];
+        
+        //B-reversing in the first 4 frames of a move
+        if (attack.special && attack.reversable && frame < 4)
+        {
+            if (user.isFacingLeft)
+            {
+                if (user.hori >= user.horiThreshold)
+                {
+                    user.isFacingLeft = false;
+                    user.airMomentum.x *= -1;
+                }
+            }
+            else
+            {
+                if (user.hori <= -user.horiThreshold)
+                {
+                    user.isFacingLeft = true;
+                    user.airMomentum.x *= -1;
+                }
+            }
+        }
+
+        //moves the user by the frames specified vector, if any
+        if (attackFrame.userMovement != Vector3.zero)
+        {
+            Vector3 tempMovement;
+            if (!user.isFacingLeft)
+            {
+                tempMovement = new Vector3(-attackFrame.userMovement.x, attackFrame.userMovement.y);
+            } else
+            {
+                tempMovement = new Vector3(attackFrame.userMovement.x, attackFrame.userMovement.y);
+            }
+
+            if (attack.aerial) {
+                user.airMomentum = tempMovement;
+            }
+            else
+            if (attack.special)
+            {
+                user.transform.Translate(tempMovement);
+            }
+            else
+            {
+                user.transform.Translate(tempMovement);
+            }
+            
+        }
 
         //runs on frames with no active hitboxes
         if (attackFrame.startupFrame == true || attackFrame.endlagFrame == true)

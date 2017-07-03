@@ -30,6 +30,8 @@ public class GameLoader : MonoBehaviour {
     public List<GameObject> fAirHitboxes;
     public List<GameObject> bAirHitboxes;
 
+    public List<GameObject> upBHitboxes;
+
     //Populates the Game's data using info/functions from GameData;
     void Start () {
         hitmanager = GetComponent<HitManager>();
@@ -54,6 +56,8 @@ public class GameLoader : MonoBehaviour {
         player1.fAirAttack = GameData.CreateExampleFAirAttack(fAirHitboxes);
         player1.bAirAttack = GameData.CreateExampleBAirAttack(bAirHitboxes);
 
+        player1.upBAttack = GameData.CreateExampleUpBAttack(upBHitboxes);
+
         player1.standing = marshmallowStand;
         player1.hitstunned = marshmallowHitstun;
 
@@ -68,6 +72,8 @@ public class GameLoader : MonoBehaviour {
         player2.uAirAttack = GameData.CreateExampleUAirAttack(uAirHitboxes);    
         player2.fAirAttack = GameData.CreateExampleFAirAttack(fAirHitboxes);
         player2.bAirAttack = GameData.CreateExampleBAirAttack(bAirHitboxes);
+
+        player2.upBAttack = GameData.CreateExampleUpBAttack(upBHitboxes);
 
         player2.standing = marshmallowStand;
         player2.hitstunned = marshmallowHitstun;

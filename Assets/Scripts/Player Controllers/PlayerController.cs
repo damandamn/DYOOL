@@ -14,10 +14,12 @@ public class PlayerController : MonoBehaviour {
         JUMPSQUAT,
         ATTACK,
         AERIAL,
+        SPECIALMOVE,
         LANDINGLAG,
         HITLAG,
         HITSTUN,
-        AIRBORNE
+        AIRBORNE,
+        SPECIALFALL
     }
 
     public PlayerGroundHandler pgh;
@@ -86,7 +88,7 @@ public class PlayerController : MonoBehaviour {
 
     float maxAirSpeed = 0.07F;
     float airAccel = 0.006F;
-    float airDeccel = 0.002F ;
+    float airDeccel = 0.004F ;
     float jumpMomentum = 0.3F;
     float fallSpeed = 0.0095F;
 
@@ -100,8 +102,8 @@ public class PlayerController : MonoBehaviour {
     int turnFrames = 2;
     int lagCount = 0;
 
-    Vector3 airMomentum = new Vector3(0, 0);
-    Vector3 groundMomentum = new Vector3(0, 0);
+    public Vector3 airMomentum = new Vector3(0, 0);
+    public Vector3 groundMomentum = new Vector3(0, 0);
 
     //hitstun variables
     public Vector3 knockbackMomentum = new Vector3(0, 0);
@@ -130,7 +132,10 @@ public class PlayerController : MonoBehaviour {
     public Attack fAirAttack = null;
     public Attack bAirAttack = null;
 
-    private void Start()
+    public Attack upBAttack = null;
+    public int upBUsed = 0;
+
+    void Start()
     {
         pgh = GetComponent<PlayerGroundHandler>();
         pam = GetComponent<PlayerAttackManager>();
@@ -144,6 +149,9 @@ public class PlayerController : MonoBehaviour {
         {
             Death();
         }
+
+        //checks at the beginning and end of Update()
+        pgh.UpdatePlatform();
         groundLevel = pgh.platHeight;
 
         if (frameCancel == true)
@@ -167,7 +175,7 @@ public class PlayerController : MonoBehaviour {
         if (transform.position.y > groundLevel)
         {
             groundMomentum.x = 0;
-            if (moveState != MoveStates.ATTACK && moveState != MoveStates.AERIAL && moveState != MoveStates.HITLAG && moveState != MoveStates.HITSTUN)
+            if (moveState == MoveStates.STILL || moveState == MoveStates.LEFTWALK || moveState == MoveStates.RIGHTWALK)
             {
                 moveState = MoveStates.AIRBORNE;
             }
@@ -175,6 +183,7 @@ public class PlayerController : MonoBehaviour {
         }
         else
         {
+            airMomentum = Vector3.zero;
             if (isGrounded == false && airMomentum.y <= 0)
             {
                 Land();
@@ -200,8 +209,15 @@ public class PlayerController : MonoBehaviour {
         {
             if (!inHitstun)
             {
+                try
+                {
+                    StopCoroutine(HitManager.playersInHitstun[this]);
+                    HitManager.playersInHitstun[this] = null;
+                } catch { }
+
+                HitManager.playersInHitstun[this] = Hitstun();
                 inHitstun = true;
-                StartCoroutine(Hitstun());
+                StartCoroutine(HitManager.playersInHitstun[this]);
             }
             HitStunControl();
         }
@@ -254,6 +270,10 @@ public class PlayerController : MonoBehaviour {
         //MOVESTATE = AERIAL
         else if (moveState == MoveStates.AERIAL) {
             AerialAttackControl();
+        }
+        else if (moveState == MoveStates.SPECIALMOVE)
+        {
+            SpecialMoveControl();
         }
         //MOVESTATE = AIRBORNE, STILL, LEFTWALK, RIGHTWALK
         else
@@ -317,13 +337,19 @@ public class PlayerController : MonoBehaviour {
             }
         }
 
+        //updates platform again to allow for sliding off edges
+        pgh.UpdatePlatform();
+        groundLevel = pgh.platHeight;
+
         //Allows for sliding off edges to keep momentum/cancel lag
         if (transform.position.y > groundLevel)
         {
+            Debug.Log(isGrounded);
             //works in MoveStates ATTACK, LANDINGLAG, LEFTWALK, RIGHTWALK, STILL
-            if (isGrounded && moveState == MoveStates.ATTACK && moveState == MoveStates.LANDINGLAG && moveState == MoveStates.LEFTWALK 
-                && moveState == MoveStates.RIGHTWALK && moveState == MoveStates.STILL)
+            if (isGrounded && (moveState == MoveStates.ATTACK || moveState == MoveStates.LANDINGLAG || moveState == MoveStates.LEFTWALK 
+                || moveState == MoveStates.RIGHTWALK || moveState == MoveStates.STILL))
             {
+              
                 airMomentum = groundMomentum;
 
                 moveState = MoveStates.AIRBORNE;
@@ -346,6 +372,11 @@ public class PlayerController : MonoBehaviour {
         if (yPress || xPress)
         {
             StartJumpsquat();
+        }
+        else
+        if (bPress)
+        {
+            pam.UseSpecialAttack(this);
         }
         else
         if (aPress || onCStick)
@@ -434,6 +465,11 @@ public class PlayerController : MonoBehaviour {
             Jump(true);
         }
 
+        if (bPress)
+        {
+            pam.UseSpecialAttack(this);
+        }
+        else
         if (aPress || onCStick)
         {
             pam.UseAerialAttack(this, onCStick);
@@ -506,6 +542,76 @@ public class PlayerController : MonoBehaviour {
         currAttackFrame++;
     }
 
+    //called every frame when the player is using a special move
+    void SpecialMoveControl()
+    {
+        if (currAttack.frameData[currAttackFrame].canControl)
+        {
+            //directional influence for drifting
+            if (hori > 0.3F && airMomentum.x > -maxAirSpeed)
+            {
+                airMomentum.x -= hori * airAccel;
+            }
+            if (hori < -0.3F && airMomentum.x < maxAirSpeed)
+            {
+                airMomentum.x += -hori * airAccel;
+            }
+
+            //deccel horizontal momentum when not drifting
+            if (!(hori > 0.3F) && !(hori < -0.3F))
+            {
+                if (airMomentum.x > 0)
+                {
+                    airMomentum.x -= airDeccel;
+                    if (airMomentum.x < 0)
+                    {
+                        airMomentum.x = 0;
+                    }
+                }
+                else if (airMomentum.x < 0)
+                {
+                    airMomentum.x += airDeccel;
+                    if (airMomentum.x > 0)
+                    {
+                        airMomentum.x = 0;
+                    }
+                }
+            }
+            transform.Translate(new Vector3(airMomentum.x, 0));
+        }
+
+        if (currAttack.frameData[currAttackFrame].canFall)
+        {
+            //accel downwards
+            if (airMomentum.y > -maxFallSpeed)
+            {
+                airMomentum.y -= fallSpeed;
+            }
+            //if falling too fast, slow down
+            if (airMomentum.y < -maxFallSpeed)
+            {
+                airMomentum.y = -maxFallSpeed;
+            }
+
+            transform.Translate(new Vector3(0, airMomentum.y));
+        }
+
+        if ((PreventClipping() || isGrounded) && currAttack.groundCancel)
+        {
+            EndAttack();
+            frameCancel = true;
+            return;
+        }
+
+        if (currAttack.frameData[currAttackFrame].canControl || currAttack.frameData[currAttackFrame].canFall)
+        {
+            transform.Translate(airMomentum);
+        }
+
+        pam.RunAttackFrame(this, currAttack, currAttackFrame);
+        currAttackFrame++;
+    }
+
     //called every frame that the player is in hitstun
     void HitStunControl()
     {
@@ -524,6 +630,7 @@ public class PlayerController : MonoBehaviour {
         //if player has landed on the ground, stop falling (bounce if spiked--techs WIP) and apply traction
         if (PreventClipping())
         {
+            Land();
             if (knockbackMomentum.y < -maxFallSpeed)
             {
                 knockbackMomentum.y = -knockbackMomentum.y * 0.75F;
@@ -624,10 +731,6 @@ public class PlayerController : MonoBehaviour {
         }
         for (int i = 0; i < hitStunDuration; i++)
         {
-            if (inHitstun == false)
-            {
-                yield break;
-            }
             yield return null;
         }
         if (isGrounded)
@@ -741,6 +844,7 @@ public class PlayerController : MonoBehaviour {
         groundMomentum.x = airMomentum.x;
         airMomentum = new Vector3(0, 0);
         jumpUsed = 0;
+        upBUsed = 0;
         fastFalling = false;
     }
 
@@ -774,7 +878,7 @@ public class PlayerController : MonoBehaviour {
         if (isGrounded)
         {
             //checks if this move should end with landing lag
-            if (currAttack.aerial && !currAttack.frameData[currAttackFrame].autoCancel)
+            if (currAttack.landingLag != 0 && !currAttack.frameData[currAttackFrame].autoCancel)
             {
                 moveState = MoveStates.LANDINGLAG;
                 lagCount = currAttack.landingLag;
@@ -948,5 +1052,5 @@ public class PlayerController : MonoBehaviour {
         }
     }
 
-    //TODO Directional Influence, Special Moves, More movement options (dash, dodge), Wall Collisions, Ledges, Blocking, 
+    //TODO Special Moves, More movement options (dash, dodge), Wall Collisions, Ledges, Blocking, 
 }

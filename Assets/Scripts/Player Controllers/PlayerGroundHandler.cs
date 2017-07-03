@@ -17,7 +17,7 @@ public class PlayerGroundHandler : MonoBehaviour {
         col = GetComponent<BoxCollider>();
     }
 
-    private void Update()
+    public void UpdatePlatform()
     {
         nextPlat = GetCurrentPlat();
         if (nextPlat != null)

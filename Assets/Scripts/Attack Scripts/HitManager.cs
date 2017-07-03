@@ -4,7 +4,10 @@ using UnityEngine;
 
 public class HitManager : MonoBehaviour {
 
-	public void CalculateHit(HitBox attack, PlayerController user, PlayerController enemy)
+    public static Dictionary<PlayerController, IEnumerator> playersInHitstun = new Dictionary<PlayerController, IEnumerator>();
+    static Dictionary<PlayerController, IEnumerator> playersInHitlag = new Dictionary<PlayerController, IEnumerator>();
+
+    public void CalculateHit(HitBox attack, PlayerController user, PlayerController enemy)
     {
         enemy.currDamage += attack.damage;
         float knockbackValue = 0;
@@ -43,8 +46,23 @@ public class HitManager : MonoBehaviour {
         {
             hitstunDuration = 1 + (int)knockbackValue;
         }
-        StartCoroutine(enemy.Hitlag(attack.hitlag + (int)attack.damage, knockbackValue, hitstunDuration, angle));
-        StartCoroutine(user.Hitlag(attack.hitlag + (int)attack.damage, knockbackValue, hitstunDuration, angle, true));
+        hitstunDuration = (int)(hitstunDuration * attack.hitStunMultiplier);
+
+        //Starts hitlag, cancelling any running hitlag coroutines
+
+        try
+        {
+            StopCoroutine(playersInHitlag[enemy]);
+            playersInHitlag[enemy] = null;
+        } catch
+        { }
+   
+        playersInHitlag[enemy] = enemy.Hitlag(attack.hitlag + (int)attack.damage, knockbackValue, hitstunDuration, angle);
+        playersInHitlag[user] = user.Hitlag(attack.hitlag + (int)attack.damage, knockbackValue, hitstunDuration, angle, true);
+        StartCoroutine(playersInHitlag[enemy]);
+        StartCoroutine(playersInHitlag[user]);
+
+
     }
 
     //Called at the end of hitlag
