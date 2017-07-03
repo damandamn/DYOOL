@@ -13,11 +13,15 @@ public class MoveFrame {
     public bool hitboxAnimated = false;
     public List<Vector3> allHitboxesAnimated = null;
 
+    public bool reHit = false;
     public bool autoCancel = false;
     public bool cancelable = false;
     public bool lastFrame = false;
+    public Vector3 userMovement = Vector3.zero;
 
+    //for special moves
+    public bool spawnProjectile = false;
     public bool canControl = false;
     public bool canFall = false;
-    public Vector3 userMovement = Vector3.zero;
+    public GameObject projectile;
 }

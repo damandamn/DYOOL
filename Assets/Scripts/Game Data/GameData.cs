@@ -62,8 +62,8 @@ public class GameData {
     {
         List<MoveFrame> fd = new List<MoveFrame>();
 
-        //Startup - 5 frames
-        for (int i = 0; i < 5; i++)
+        //Startup - 10 frames
+        for (int i = 0; i < 10; i++)
         {
             fd.Add(new MoveFrame()
             {
@@ -86,8 +86,8 @@ public class GameData {
             });
         }
 
-        //Endlag - 22 frames
-        for (int i = 0; i < 22; i++)
+        //Endlag - 28 frames
+        for (int i = 0; i < 28; i++)
         {
             fd.Add(new MoveFrame()
             {
@@ -95,7 +95,7 @@ public class GameData {
             });
         }
 
-        //FAF - 25
+        //FAF - 40
         fd.Add(new MoveFrame()
         {
             lastFrame = true
@@ -374,8 +374,8 @@ public class GameData {
 
         List<MoveFrame> fd = new List<MoveFrame>();
 
-        //Startup - 9 frames
-        for (int i = 0; i < 9; i++)
+        //Startup - 8 frames
+        for (int i = 0; i < 8; i++)
         {
             fd.Add(new MoveFrame()
             {
@@ -400,8 +400,8 @@ public class GameData {
             });
         }
 
-        //Endlag - 30 frames (autocancel 10 frames)
-        for (int i = 0; i < 20; i++)
+        //Endlag - 25 frames (autocancel 10 frames)
+        for (int i = 0; i < 15; i++)
         {
             fd.Add(new MoveFrame()
             {
@@ -418,7 +418,7 @@ public class GameData {
             });
         }
 
-        //FAF - 46
+        //FAF - 39
         fd.Add(new MoveFrame()
         {
             lastFrame = true
@@ -597,6 +597,112 @@ public class GameData {
         return bAirAttack;
     }
 
+    public static Attack CreateMultiHitFAirAttack(List<GameObject> hb)
+    {
+        List<MoveFrame> fd = new List<MoveFrame>();
+
+        //Startup - 5 frames
+        for (int i = 0; i < 6; i++)
+        {
+            fd.Add(new MoveFrame()
+            {
+                startupFrame = true
+            });
+        }
+
+        List<bool> activeHitboxes = new List<bool>()
+        {
+            true,
+            false
+        };
+
+        //Active - 18 (rehit 5) + 3 frames
+
+        //adds 4 active frames, then a frame with reHit, 3 times
+        for (int i = 0; i < 2; i++)
+        {
+
+            for (int i2 = 0; i2 < 4; i2++)
+            {
+                fd.Add(new MoveFrame()
+                {
+                    hitboxActive = true,
+                    allHitboxesActive = activeHitboxes
+                });
+            }
+
+            fd.Add(new MoveFrame()
+            {
+                reHit = true
+            });
+        }
+
+        //Frames before final hit; 5
+        for (int i = 0; i < 4; i++)
+        {
+            fd.Add(new MoveFrame()
+            {
+                endlagFrame = true
+            });
+        }
+
+        fd.Add(new MoveFrame()
+        {
+            endlagFrame = true,
+            reHit = true
+        });
+
+
+        activeHitboxes = new List<bool>()
+        {
+            false,
+            true
+        };
+
+        //Last hit active for 3 frames
+        for (int i = 0; i < 3; i++)
+        {
+            fd.Add(new MoveFrame()
+            {
+                hitboxActive = true,
+                allHitboxesActive = activeHitboxes
+            });
+        }
+
+
+        //Endlag - 11 frames (autocancel 6 frames)
+        for (int i = 0; i < 5; i++)
+        {
+            fd.Add(new MoveFrame()
+            {
+                endlagFrame = true
+            });
+        }
+
+        for (int i = 0; i < 6; i++)
+        {
+            fd.Add(new MoveFrame()
+            {
+                endlagFrame = true,
+                autoCancel = true
+            });
+        }
+
+        //FAF - 37
+        fd.Add(new MoveFrame()
+        {
+            lastFrame = true
+        });
+
+        Attack fAirAttack = new Attack(hb, fd);
+        fAirAttack.aerial = true;
+        fAirAttack.landingLag = 14;
+
+
+        return fAirAttack;
+
+    }
+
     public static Attack CreateExampleUpBAttack(List<GameObject> hb)
     {
         List<MoveFrame> fd = new List<MoveFrame>();
@@ -687,11 +793,63 @@ public class GameData {
 
         Attack UpBAttack = new Attack(true, hb, fd)
         {
-            cancelAirMomentum = true
+            cancelAirMomentum = true,
+            reverseFrames = 4
         };
 
         return UpBAttack;
 
+    }
+
+    public static Attack CreateExampleProjectileAttack(List<GameObject>hb)
+    {
+        List<MoveFrame> fd = new List<MoveFrame>();
+
+        //Startup - 25 frames
+        for (int i = 0; i < 25; i++)
+        {
+            fd.Add(new MoveFrame()
+            {
+                startupFrame = true,
+                canControl = true,
+                canFall = true
+            });
+        }
+
+        fd.Add(new MoveFrame()
+        {
+            spawnProjectile = true,
+            canControl = true,
+            canFall = true
+        });
+
+        //Endlag - 15 frames
+        for (int i = 0; i < 15; i++)
+        {
+            fd.Add(new MoveFrame()
+            {
+                endlagFrame = true,
+                canControl = true,
+                canFall = true
+            });
+        }
+
+        //FAF - 16
+        fd.Add(new MoveFrame()
+        {
+            lastFrame = true,
+            canControl = true,
+            canFall = true
+        });
+
+        Attack exampleProjectileAttack = new Attack(true, hb, fd)
+        {
+            projectile = hb[0],
+            destroyOnHit = true,
+            reverseFrames = 6,
+        };
+
+        return exampleProjectileAttack;
     }
 }
 

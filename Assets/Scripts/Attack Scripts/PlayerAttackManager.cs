@@ -20,28 +20,33 @@ public class PlayerAttackManager : MonoBehaviour {
     {
         if (isCStick)
         {
+            //CStick is diagonal
             if (Mathf.Abs(user.cHori) >= user.horiThreshold && Mathf.Abs(user.cVert) >= user.vertThreshold)
             {
                 StartAttack(user, user.jabAttack);
             }
             else
+            //CStick is to the right
             if (user.cHori >= user.horiThreshold)
             {
                 user.isFacingLeft = false;
                 StartAttack(user, user.fTiltAttack);
             }
             else
+            //CStick is to the left
             if (user.cHori <= -user.horiThreshold)
             {
                 user.isFacingLeft = true;
                 StartAttack(user, user.fTiltAttack);
             }
             else
+            //CStick is up
             if (user.cVert >= user.vertThreshold)
             {
                 StartAttack(user, user.uTiltAttack);
             }
             else
+            //CStick is down
             if (user.cVert <= -user.vertThreshold)
             {
                 StartAttack(user, user.dTiltAttack);
@@ -53,21 +58,51 @@ public class PlayerAttackManager : MonoBehaviour {
         }
         else
         {
+            //Stick is diagonally up
+            if (Mathf.Abs(user.hori) > Mathf.Abs(user.horiThreshold) && user.vert > user.vertThreshold)
+            {
+                if (Mathf.Abs(user.hori) >= Mathf.Abs(user.vert))
+                {
+                    StartAttack(user, user.fTiltAttack);
+                }
+                else
+                {
+                    StartAttack(user, user.uTiltAttack);
+                }
+            }
+            else
+            //Stick is diagonally down
+            if (Mathf.Abs(user.hori) > Mathf.Abs(user.horiThreshold) && user.vert < -user.vertThreshold)
+            {
+                if (Mathf.Abs(user.hori) > Mathf.Abs(user.vert))
+                {
+                    StartAttack(user, user.fTiltAttack);
+                }
+                else
+                {
+                    StartAttack(user, user.dTiltAttack);
+                }
+            }
+            else
+            //Stick is neutral
             if (Mathf.Abs(user.hori) < Mathf.Abs(user.horiThreshold) && Mathf.Abs(user.vert) < Mathf.Abs(user.vertThreshold))
             {
                 StartAttack(user, user.jabAttack);
             }
             else
+            //stick is forward/backward
             if (Mathf.Abs(user.hori) > Mathf.Abs(user.horiThreshold) && Mathf.Abs(user.vert) < Mathf.Abs(user.vertThreshold))
             {
                 StartAttack(user, user.fTiltAttack);
             }
             else
+            //stick is up
             if (Mathf.Abs(user.hori) < Mathf.Abs(user.horiThreshold) && user.vert > user.vertThreshold)
             {
                 StartAttack(user, user.uTiltAttack);
             }
             else
+            //stick is down
             if (Mathf.Abs(user.hori) < Mathf.Abs(user.horiThreshold) && user.vert < -user.vertThreshold)
             {
                 StartAttack(user, user.dTiltAttack);
@@ -83,21 +118,25 @@ public class PlayerAttackManager : MonoBehaviour {
     {
         if (isCStick)
         {
+            //CStick is diagonal
             if (Mathf.Abs(user.cHori) >= user.horiThreshold && Mathf.Abs(user.cVert) >= user.vertThreshold)
             {
                 StartAttack(user, user.nAirAttack);
             }
             else
+            //CStick is down
             if (user.cVert <= -user.vertThreshold)
             {
                 StartAttack(user, user.dAirAttack);
             }
             else
+            //CStick is up
             if (user.cVert >= user.vertThreshold)
             {
                 StartAttack(user, user.uAirAttack);
             }
             else
+            //CStick is to the right
             if (user.cHori >= user.horiThreshold)
             {
                 if (!user.isFacingLeft)
@@ -110,6 +149,7 @@ public class PlayerAttackManager : MonoBehaviour {
                 }
             }
             else
+            //CStick is to the left
             if (user.cHori <= -user.horiThreshold)
             {
                 if (user.isFacingLeft)
@@ -129,6 +169,76 @@ public class PlayerAttackManager : MonoBehaviour {
         }
         else
         {
+            //Stick is diagonally up
+            if (Mathf.Abs(user.hori) > Mathf.Abs(user.horiThreshold) && user.vert > user.vertThreshold)
+            {
+                if (Mathf.Abs(user.vert) >= Mathf.Abs(user.hori))
+                {
+                    StartAttack(user, user.uAirAttack);
+                }
+                else
+                {
+                    if (user.hori > user.horiThreshold)
+                    {
+                        if (!user.isFacingLeft)
+                        {
+                            StartAttack(user, user.fAirAttack);
+                        }
+                        else
+                        {
+                            StartAttack(user, user.bAirAttack);
+                        }
+                    }
+                    else
+                    if (user.hori < -user.horiThreshold)
+                    {
+                        if (user.isFacingLeft)
+                        {
+                            StartAttack(user, user.fAirAttack);
+                        }
+                        else
+                        {
+                            StartAttack(user, user.bAirAttack);
+                        }
+                    }
+                }
+            }
+            else
+            //Stick is diagonally down
+            if (Mathf.Abs(user.hori) > Mathf.Abs(user.horiThreshold) && user.vert < -user.vertThreshold)
+            {
+                if (Mathf.Abs(user.vert) >= Mathf.Abs(user.hori))
+                {
+                    StartAttack(user, user.dAirAttack);
+                }
+                else
+                {
+                    if (user.hori > user.horiThreshold)
+                    {
+                        if (!user.isFacingLeft)
+                        {
+                            StartAttack(user, user.fAirAttack);
+                        }
+                        else
+                        {
+                            StartAttack(user, user.bAirAttack);
+                        }
+                    }
+                    else
+                    if (user.hori < -user.horiThreshold)
+                    {
+                        if (user.isFacingLeft)
+                        {
+                            StartAttack(user, user.fAirAttack);
+                        }
+                        else
+                        {
+                            StartAttack(user, user.bAirAttack);
+                        }
+                    }
+                }
+            }
+            else
             if (Mathf.Abs(user.hori) < user.horiThreshold && Mathf.Abs(user.vert) < user.vertThreshold)
             {
                 StartAttack(user, user.nAirAttack);
@@ -149,7 +259,8 @@ public class PlayerAttackManager : MonoBehaviour {
                 if (!user.isFacingLeft)
                 {
                     StartAttack(user, user.fAirAttack);
-                } else
+                }
+                else
                 {
                     StartAttack(user, user.bAirAttack);
                 }
@@ -160,7 +271,8 @@ public class PlayerAttackManager : MonoBehaviour {
                 if (user.isFacingLeft)
                 {
                     StartAttack(user, user.fAirAttack);
-                } else
+                }
+                else
                 {
                     StartAttack(user, user.bAirAttack);
                 }
@@ -174,12 +286,27 @@ public class PlayerAttackManager : MonoBehaviour {
 
     public void UseSpecialAttack(PlayerController user)
     {
-        if (Mathf.Abs(user.hori) < user.horiThreshold && user.vert > user.vertThreshold)
+        //stick is neutral
+        if (Mathf.Abs(user.vert) < user.vertThreshold && Mathf.Abs(user.hori) < user.horiThreshold)
         {
-            Debug.Log(user.upBUsed);
-            if (user.upBUsed < user.upBAttack.aerialUses) {
-                user.upBUsed++;
-                StartAttack(user, user.upBAttack);
+            StartAttack(user, user.nBAttack);
+        }
+        else
+        //stick is up
+        if (user.vert > user.vertThreshold)
+        {
+            if (user.vert >= Mathf.Abs(user.hori))
+            {
+                if (user.upBUsed < user.upBAttack.aerialUses)
+                {
+                    user.upBUsed++;
+                    StartAttack(user, user.upBAttack);
+                }
+            }
+            else
+            //Stick is diagonally up
+            {
+
             }
         }
     }
@@ -208,14 +335,18 @@ public class PlayerAttackManager : MonoBehaviour {
         user.currAttack = attack;
         foreach (GameObject hitbox in user.currAttack.hitBoxes)
         {
-            GameObject go = Instantiate(hitbox);
+            if (hitbox.GetComponent<HitBox>().hitboxType == "Attack")
+            {
+                GameObject go = Instantiate(hitbox);
 
-            go.transform.parent = user.transform;
-            go.transform.position = user.transform.position;
-            go.transform.localScale = new Vector3(0.3F, 0.3F, 0.3F);
+                go.transform.parent = user.transform;
+                go.transform.position = user.transform.position;
+                go.transform.localScale = new Vector3(0.3F, 0.3F, 0.3F);
+                go.GetComponent<HitBox>().user = user;
+                currHitboxes.Add(go);
+            }
 
-            go.GetComponent<HitBox>().user = user;
-            currHitboxes.Add(go);
+
         }
         allHitboxesDisabled = false;
     }
@@ -223,11 +354,10 @@ public class PlayerAttackManager : MonoBehaviour {
     //checks what to do at the start of each frame in an attack animation
     public void RunAttackFrame(PlayerController user, Attack attack, int frame)
     {
-
         MoveFrame attackFrame = attack.frameData[frame];
         
-        //B-reversing in the first 4 frames of a move
-        if (attack.special && attack.reversable && frame < 4)
+        //B-reversing in the first few frames of a move
+        if (attack.special && attack.reversable && frame < attack.reverseFrames)
         {
             if (user.isFacingLeft)
             {
@@ -251,12 +381,12 @@ public class PlayerAttackManager : MonoBehaviour {
         if (attackFrame.userMovement != Vector3.zero)
         {
             Vector3 tempMovement;
-            if (!user.isFacingLeft)
-            {
-                tempMovement = new Vector3(-attackFrame.userMovement.x, attackFrame.userMovement.y);
-            } else
+            if (user.isFacingLeft)
             {
                 tempMovement = new Vector3(attackFrame.userMovement.x, attackFrame.userMovement.y);
+            } else
+            {
+                tempMovement = new Vector3(-attackFrame.userMovement.x, attackFrame.userMovement.y);
             }
 
             if (attack.aerial) {
@@ -273,6 +403,14 @@ public class PlayerAttackManager : MonoBehaviour {
             }
             
         }
+        //allows for multihit moves. Always put rehit on an inactive frame
+        if (attackFrame.reHit)
+        {
+            foreach (List<Attack> nullify in nullAttackLists)
+            {
+                nullify.Remove(attack);
+            }
+        }
 
         //runs on frames with no active hitboxes
         if (attackFrame.startupFrame == true || attackFrame.endlagFrame == true)
@@ -287,11 +425,29 @@ public class PlayerAttackManager : MonoBehaviour {
             }
         }
 
+        //runs on frames that spawn projectiles
+        if (attackFrame.spawnProjectile)
+        {
+            attack.projectile.GetComponent<HitBox>().user = user;
+            Projectile proj = attack.projectile.GetComponent<Projectile>();
+            proj.user = user;
+
+            if (!user.isFacingLeft)
+            {
+                Instantiate(attack.projectile, user.transform.position + proj.offset, proj.rotation);
+            }
+            else
+            {
+                Instantiate(attack.projectile, user.transform.position + new Vector3(-proj.offset.x, proj.offset.y), new Quaternion(proj.rotation.x, proj.rotation.y + 180, proj.rotation.z, 0));
+            }
+        }
+
         //runs on frames that contain active hitboxes
         if (attackFrame.hitboxActive == true)
         {
             allHitboxesDisabled = false;
 
+            //Animates animated hitboxes
             if (attackFrame.hitboxAnimated)
             {
                 int i = 0;
@@ -299,28 +455,28 @@ public class PlayerAttackManager : MonoBehaviour {
                 {
                     if (offset.x != 0 || offset.y != 0)
                     {
-                       currHitboxes[i].transform.Translate(new Vector3(offset.x, offset.y));
+                        currHitboxes[i].transform.Translate(new Vector3(offset.x, offset.y));
                     }
 
                     i++;
                 }
             }
-            int i2 = 0;
-            foreach (bool active in attackFrame.allHitboxesActive)
+
+            //Disables/enables hitboxes as described in allHitboxesActive
+            for (int i2 = 0; i2 < attackFrame.allHitboxesActive.Count; i2++)
             {
-                if (active)
+                if (attackFrame.allHitboxesActive[i2])
                 {
                     currHitboxes[i2].GetComponent<SphereCollider>().enabled = true;
-                } else
+                }
+                else
                 {
                     currHitboxes[i2].GetComponent<SphereCollider>().enabled = false;
                 }
-
-                i2++;
             }
         } else
 
-        //runs on the last frame of an animation
+        //runs on the last frame of an attack
         if (attackFrame.lastFrame == true)
         {
             user.EndAttack();
@@ -353,6 +509,11 @@ public class PlayerAttackManager : MonoBehaviour {
         }
     }
 
+    void DestroyHitbox(HitBox hitbox)
+    {
+        Destroy(hitbox.gameObject);
+    }
+
     IEnumerator SendHit()
     {
         yield return new WaitForEndOfFrame();
@@ -361,6 +522,10 @@ public class PlayerAttackManager : MonoBehaviour {
         {
             sender.hit.GetComponent<PlayerController>().nullify.Add(sender.attack);
             GameLoader.hitmanager.CalculateHit(sender, sender.user, sender.hit.GetComponent<PlayerController>());
+            if (sender.attack.destroyOnHit)
+            {
+                Destroy(sender.gameObject);
+            }
         } else
         {
             foreach (HitBox h in hits)

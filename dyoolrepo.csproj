@@ -83,6 +83,7 @@
     <Compile Include="Assets\Scripts\Attack Scripts\HitManager.cs" />
     <Compile Include="Assets\Scripts\Attack Scripts\MoveFrame.cs" />
     <Compile Include="Assets\Scripts\Attack Scripts\PlayerAttackManager.cs" />
+    <Compile Include="Assets\Scripts\Attack Scripts\Projectile.cs" />
     <Compile Include="Assets\Scripts\FrameRateClamp.cs" />
     <Compile Include="Assets\Scripts\Game Data\GameData.cs" />
     <Compile Include="Assets\Scripts\Game Data\GameLoader.cs" />

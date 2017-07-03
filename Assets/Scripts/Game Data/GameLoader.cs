@@ -30,7 +30,9 @@ public class GameLoader : MonoBehaviour {
     public List<GameObject> fAirHitboxes;
     public List<GameObject> bAirHitboxes;
 
+    public List<GameObject> multiHitFAirHitboxes;
     public List<GameObject> upBHitboxes;
+    public List<GameObject> exampleProjectile;
 
     //Populates the Game's data using info/functions from GameData;
     void Start () {
@@ -53,10 +55,11 @@ public class GameLoader : MonoBehaviour {
         player1.nAirAttack = GameData.CreateExampleNAirAttack(nAirHitboxes);
         player1.dAirAttack = GameData.CreateExampleDAirAttack(dAirHitboxes);
         player1.uAirAttack = GameData.CreateExampleUAirAttack(uAirHitboxes);
-        player1.fAirAttack = GameData.CreateExampleFAirAttack(fAirHitboxes);
+        player1.fAirAttack = GameData.CreateMultiHitFAirAttack(multiHitFAirHitboxes);
         player1.bAirAttack = GameData.CreateExampleBAirAttack(bAirHitboxes);
 
         player1.upBAttack = GameData.CreateExampleUpBAttack(upBHitboxes);
+        player1.nBAttack = GameData.CreateExampleProjectileAttack(exampleProjectile);
 
         player1.standing = marshmallowStand;
         player1.hitstunned = marshmallowHitstun;
@@ -70,10 +73,11 @@ public class GameLoader : MonoBehaviour {
         player2.nAirAttack = GameData.CreateExampleNAirAttack(nAirHitboxes);
         player2.dAirAttack = GameData.CreateExampleDAirAttack(dAirHitboxes);
         player2.uAirAttack = GameData.CreateExampleUAirAttack(uAirHitboxes);    
-        player2.fAirAttack = GameData.CreateExampleFAirAttack(fAirHitboxes);
+        player2.fAirAttack = GameData.CreateMultiHitFAirAttack(multiHitFAirHitboxes);
         player2.bAirAttack = GameData.CreateExampleBAirAttack(bAirHitboxes);
 
         player2.upBAttack = GameData.CreateExampleUpBAttack(upBHitboxes);
+        player2.nBAttack = GameData.CreateExampleProjectileAttack(exampleProjectile);
 
         player2.standing = marshmallowStand;
         player2.hitstunned = marshmallowHitstun;

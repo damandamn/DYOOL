@@ -8,12 +8,14 @@ public class Attack {
     public List<MoveFrame> frameData;
     public bool aerial = false;
     public int landingLag = 0;
+    public bool destroyOnHit = false;
 
     //variables for special moves
     public bool special = false;
+    public GameObject projectile = null;
     public bool cancelAirMomentum = false;
     public bool reversable = true;
-    public bool canControl = false;
+    public int reverseFrames = 0;
     public int aerialUses = 1;
     public bool groundCancel = false;
     public bool specialFall = false;
@@ -40,7 +42,6 @@ public class Attack {
         frameData = fd;
         aerialUses = airuses;
         specialFall = spFall;
-        canControl = control;
         groundCancel = gCancel;
         landingLag = lLag;
 

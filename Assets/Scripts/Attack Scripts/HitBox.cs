@@ -11,7 +11,7 @@ public class HitBox : MonoBehaviour {
     public int priority;
     public Collider hit;
 
-    string hitboxType = "Sphere";
+    public string hitboxType = "Attack";
     public Vector3 offset;
     public float radius;
     float height;
@@ -23,24 +23,27 @@ public class HitBox : MonoBehaviour {
     public int hitlag;
     public float hitStunMultiplier = 1;
 
-    public bool reversable = false;
+    public bool reverseHit = false;
 
     void Start()
     {
         attack = user.currAttack;
         gameObject.tag = "Hitbox";
 
-        if (hitboxType == "Sphere")
+        hitbox = gameObject.AddComponent<SphereCollider>();
+        hitbox.center = new Vector3(-offset.x, offset.y);
+        hitbox.radius = radius;
+        if (hitboxType == "Projectile")
         {
-            hitbox = gameObject.AddComponent<SphereCollider>();
+            hitbox.GetComponent<SphereCollider>().enabled = true;
+        } else
+        {
             hitbox.GetComponent<SphereCollider>().enabled = false;
-            hitbox.center = new Vector3(-offset.x, offset.y);
-            hitbox.radius = radius;
         }
     }
 
 
-    void OnTriggerEnter(Collider other)
+    void OnTriggerStay(Collider other)
     {
         //is this collider another player?
         if (other.gameObject != user.gameObject && other.gameObject.tag == "Player")

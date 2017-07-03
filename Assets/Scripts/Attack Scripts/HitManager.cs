@@ -13,8 +13,11 @@ public class HitManager : MonoBehaviour {
         float knockbackValue = 0;
         float growth = (enemy.currDamage / 100);
         float multiplier = 2 - (enemy.weight / 100);
-
-        float angle = CalculateAngle(attack, user, enemy);
+        float angle = attack.angle;
+        if (angle < 360)
+        {
+            angle = CalculateAngle(attack, user, enemy);
+        }
 
 
 
@@ -36,8 +39,6 @@ public class HitManager : MonoBehaviour {
         knockbackValue *= 1 + (attack.damage / 100);
         knockbackValue += attack.baseKnockback;
 
-        Debug.Log(knockbackValue);
-
         //hitstun duration formula. Improve on this! 
         int hitstunDuration;
         if (knockbackValue >= 50) {
@@ -57,17 +58,26 @@ public class HitManager : MonoBehaviour {
         } catch
         { }
    
-        playersInHitlag[enemy] = enemy.Hitlag(attack.hitlag + (int)attack.damage, knockbackValue, hitstunDuration, angle);
-        playersInHitlag[user] = user.Hitlag(attack.hitlag + (int)attack.damage, knockbackValue, hitstunDuration, angle, true);
+        playersInHitlag[enemy] = enemy.Hitlag(attack.hitlag + (int)attack.damage, knockbackValue, hitstunDuration, angle, user);
         StartCoroutine(playersInHitlag[enemy]);
-        StartCoroutine(playersInHitlag[user]);
+
+        //no hitlag for attacker if they used a projectile
+        if (attack.hitboxType != "Projectile")
+        {
+            playersInHitlag[user] = user.Hitlag(attack.hitlag + (int)attack.damage, knockbackValue, hitstunDuration, angle, null, true);
+            StartCoroutine(playersInHitlag[user]);
+        }
 
 
     }
 
     //Called at the end of hitlag
-    public Vector3 CalculateLaunch(float knockbackValue, float angle, float fallspeed)
+    public Vector3 CalculateLaunch(float knockbackValue, float angle, float fallspeed, PlayerController sender)
     {
+        if (angle == 361)
+        {
+            return sender.airMomentum;
+        }
         float kbX = 0;
         float kbY = 0;
 
@@ -81,6 +91,7 @@ public class HitManager : MonoBehaviour {
         kbY *= 1 + multiplier;
 
         Vector3 knockback = new Vector3(kbX, kbY);
+
         return knockback * 1.5F;
     }
 
@@ -95,7 +106,7 @@ public class HitManager : MonoBehaviour {
         }
         
         //reverses angle if it is reversable and the enemy is behind the user
-        if(attack.reversable)
+        if(attack.reverseHit)
         {
             if (user.isFacingLeft)
             {

@@ -134,6 +134,7 @@ public class PlayerController : MonoBehaviour {
 
     public Attack upBAttack = null;
     public int upBUsed = 0;
+    public Attack nBAttack = null;
 
     void Start()
     {
@@ -329,10 +330,29 @@ public class PlayerController : MonoBehaviour {
             }
             else
             {
-                transform.Translate(airMomentum);
-                if (PreventClipping())
+                if (moveState == MoveStates.SPECIALMOVE)
                 {
-                    Land();
+                    //only translates x or y depending on move properties
+                    if (currAttack.frameData[currAttackFrame].canControl)
+                    {
+                        transform.Translate(new Vector3(airMomentum.x, 0));
+                    }
+                    if (currAttack.frameData[currAttackFrame].canFall)
+                    {
+                        transform.Translate(new Vector3(0, airMomentum.y));
+                    }
+                    if (PreventClipping())
+                    {
+                        Land();
+                    }
+                }
+                else
+                {
+                    transform.Translate(airMomentum);
+                    if (PreventClipping())
+                    {
+                        Land();
+                    }
                 }
             }
         }
@@ -344,7 +364,6 @@ public class PlayerController : MonoBehaviour {
         //Allows for sliding off edges to keep momentum/cancel lag
         if (transform.position.y > groundLevel)
         {
-            Debug.Log(isGrounded);
             //works in MoveStates ATTACK, LANDINGLAG, LEFTWALK, RIGHTWALK, STILL
             if (isGrounded && (moveState == MoveStates.ATTACK || moveState == MoveStates.LANDINGLAG || moveState == MoveStates.LEFTWALK 
                 || moveState == MoveStates.RIGHTWALK || moveState == MoveStates.STILL))
@@ -545,67 +564,69 @@ public class PlayerController : MonoBehaviour {
     //called every frame when the player is using a special move
     void SpecialMoveControl()
     {
-        if (currAttack.frameData[currAttackFrame].canControl)
+        if (isGrounded)
         {
-            //directional influence for drifting
-            if (hori > 0.3F && airMomentum.x > -maxAirSpeed)
+            ApplyTraction();
+        }
+        else
+        //Simulates air control if the properties of the move allow
+        {
+            if (currAttack.frameData[currAttackFrame].canControl)
             {
-                airMomentum.x -= hori * airAccel;
-            }
-            if (hori < -0.3F && airMomentum.x < maxAirSpeed)
-            {
-                airMomentum.x += -hori * airAccel;
-            }
-
-            //deccel horizontal momentum when not drifting
-            if (!(hori > 0.3F) && !(hori < -0.3F))
-            {
-                if (airMomentum.x > 0)
+                //directional influence for drifting
+                if (hori > 0.3F && airMomentum.x > -maxAirSpeed)
                 {
-                    airMomentum.x -= airDeccel;
-                    if (airMomentum.x < 0)
-                    {
-                        airMomentum.x = 0;
-                    }
+                    airMomentum.x -= hori * airAccel;
                 }
-                else if (airMomentum.x < 0)
+                if (hori < -0.3F && airMomentum.x < maxAirSpeed)
                 {
-                    airMomentum.x += airDeccel;
+                    airMomentum.x += -hori * airAccel;
+                }
+
+                //deccel horizontal momentum when not drifting
+                if (!(hori > 0.3F) && !(hori < -0.3F))
+                {
                     if (airMomentum.x > 0)
                     {
-                        airMomentum.x = 0;
+                        airMomentum.x -= airDeccel;
+                        if (airMomentum.x < 0)
+                        {
+                            airMomentum.x = 0;
+                        }
+                    }
+                    else if (airMomentum.x < 0)
+                    {
+                        airMomentum.x += airDeccel;
+                        if (airMomentum.x > 0)
+                        {
+                            airMomentum.x = 0;
+                        }
                     }
                 }
+                //transform.Translate(new Vector3(airMomentum.x, 0));
             }
-            transform.Translate(new Vector3(airMomentum.x, 0));
-        }
 
-        if (currAttack.frameData[currAttackFrame].canFall)
-        {
-            //accel downwards
-            if (airMomentum.y > -maxFallSpeed)
+            if (currAttack.frameData[currAttackFrame].canFall)
             {
-                airMomentum.y -= fallSpeed;
-            }
-            //if falling too fast, slow down
-            if (airMomentum.y < -maxFallSpeed)
-            {
-                airMomentum.y = -maxFallSpeed;
-            }
+                //accel downwards
+                if (airMomentum.y > -maxFallSpeed)
+                {
+                    airMomentum.y -= fallSpeed;
+                }
+                //if falling too fast, slow down
+                if (airMomentum.y < -maxFallSpeed)
+                {
+                    airMomentum.y = -maxFallSpeed;
+                }
 
-            transform.Translate(new Vector3(0, airMomentum.y));
+                //transform.Translate(new Vector3(0, airMomentum.y));
+            }
         }
-
         if ((PreventClipping() || isGrounded) && currAttack.groundCancel)
         {
             EndAttack();
             frameCancel = true;
             return;
-        }
-
-        if (currAttack.frameData[currAttackFrame].canControl || currAttack.frameData[currAttackFrame].canFall)
-        {
-            transform.Translate(airMomentum);
         }
 
         pam.RunAttackFrame(this, currAttack, currAttackFrame);
@@ -623,7 +644,8 @@ public class PlayerController : MonoBehaviour {
         //if falling too fast, slow down depending on your speed
         if (knockbackMomentum.y < -maxFallSpeed)
         {
-            knockbackMomentum.y += (fallSpeed) * (knockbackMomentum.y / -maxFallSpeed);
+
+            knockbackMomentum.y += (fallSpeed) * 1.05F;
         }
 
         transform.position += knockbackMomentum;
@@ -631,9 +653,10 @@ public class PlayerController : MonoBehaviour {
         if (PreventClipping())
         {
             Land();
-            if (knockbackMomentum.y < -maxFallSpeed)
+            if (knockbackMomentum.y < -maxFallSpeed * 1.6)
             {
                 knockbackMomentum.y = -knockbackMomentum.y * 0.75F;
+                hitStunDuration += 10;
             }
             else
             {
@@ -665,7 +688,7 @@ public class PlayerController : MonoBehaviour {
     }
 
     //called when hitlag starts, signals end of hitlag
-    public IEnumerator Hitlag(int duration, float knockbackValue, int hitstun, float angle, bool attacker = false)
+    public IEnumerator Hitlag(int duration, float knockbackValue, int hitstun, float angle, PlayerController sender = null, bool attacker = false)
     {
         if (frameCancel)
         {
@@ -709,7 +732,7 @@ public class PlayerController : MonoBehaviour {
         else
         {
             //begin launch
-            knockbackMomentum = GameLoader.hitmanager.CalculateLaunch(knockbackValue, angle, fallSpeed);
+            knockbackMomentum = GameLoader.hitmanager.CalculateLaunch(knockbackValue, angle, fallSpeed, sender);
             hitStunDuration = hitstun;
 
             inHitstun = false;
@@ -1052,5 +1075,5 @@ public class PlayerController : MonoBehaviour {
         }
     }
 
-    //TODO Special Moves, More movement options (dash, dodge), Wall Collisions, Ledges, Blocking, 
+    //TODO More movement options (dash, dodge), Wall Collisions, Ledges, Blocking, 
 }
