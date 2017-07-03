@@ -9,6 +9,15 @@ public class Attack {
     public bool aerial = false;
     public int landingLag = 0;
 
+    //variables for special moves
+    public bool special = false;
+    public bool cancelAirMomentum = false;
+    public bool reversable = true;
+    public bool canControl = false;
+    public int aerialUses = 1;
+    public bool groundCancel = false;
+    public bool specialFall = false;
+
     public Attack(List<GameObject> hb, List<MoveFrame> fd, bool air = false, int lLag = 0)
     {
         hitBoxes = hb;
@@ -22,5 +31,24 @@ public class Attack {
         }
     }
 
-    
+
+    public Attack(bool s, List<GameObject> hb, List<MoveFrame> fd, int airuses = 1, bool spFall = false, bool control = false, bool gCancel = false, int lLag = 0)
+    {
+        special = s;
+
+        hitBoxes = hb;
+        frameData = fd;
+        aerialUses = airuses;
+        specialFall = spFall;
+        canControl = control;
+        groundCancel = gCancel;
+        landingLag = lLag;
+
+        for (int i = 0; i < hitBoxes.Count; i++)
+        {
+            hitBoxes[i].GetComponent<HitBox>().priority = i;
+        }
+    }
+
+
 }

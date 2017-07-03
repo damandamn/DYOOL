@@ -7,7 +7,7 @@ public class StageBuilder : MonoBehaviour {
     public Material platMat;
 
     static float flatStageHeight = 26;
-    static float flatStageBottom = -15;
+    static float flatStageBottom = -18;
     static float flatStageWidth = 30;
 
     public void ConstructFlat()

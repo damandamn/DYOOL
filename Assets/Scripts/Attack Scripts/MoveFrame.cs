@@ -8,27 +8,16 @@ public class MoveFrame {
     public bool endlagFrame = false;
 
     public bool hitboxActive = false;
-    public List<bool> allHitboxesActive;
+    public List<bool> allHitboxesActive = null;
 
     public bool hitboxAnimated = false;
-    public List<Vector3> allHitboxesAnimated;
+    public List<Vector3> allHitboxesAnimated = null;
 
     public bool autoCancel = false;
     public bool cancelable = false;
     public bool lastFrame = false;
 
-    public MoveFrame(bool startframe, bool endframe, bool hboxactive, List<bool> activehboxlist= null, bool lastframe = false, bool hboxanimated = false, List<Vector3> animateList = null, bool aCan = false, bool can = false)
-    {
-        startupFrame = startframe;
-        endlagFrame = endframe;
-        hitboxActive = hboxactive;
-        allHitboxesActive = activehboxlist;
-        lastFrame = lastframe;
-
-        hitboxAnimated = hboxanimated;
-        allHitboxesAnimated = animateList;
-
-        autoCancel = aCan;
-        cancelable = can;
-}
+    public bool canControl = false;
+    public bool canFall = false;
+    public Vector3 userMovement = Vector3.zero;
 }
