@@ -91,9 +91,11 @@
     <Compile Include="Assets\Scripts\Game Data\StageBuilder.cs" />
     <Compile Include="Assets\Scripts\Game Data\StageData.cs" />
     <Compile Include="Assets\Scripts\InputManager.cs" />
+    <Compile Include="Assets\Scripts\Player Controllers\MorganisController.cs" />
     <Compile Include="Assets\Scripts\Player Controllers\PlayerController.cs" />
     <Compile Include="Assets\Scripts\Player Controllers\PlayerGroundHandler.cs" />
     <Compile Include="Assets\Scripts\UI\DamageCounter.cs" />
+    <Compile Include="Assets\Scripts\UI\HitboxRender.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="GenerateTargetFrameworkMonikerAttribute" />

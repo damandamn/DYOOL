@@ -26,10 +26,6 @@ public class PlayerController : MonoBehaviour {
     public PlayerAttackManager pam;
     public Renderer render;
 
-    //Animations
-    public Material standing;
-    public Material hitstunned;
-
     public int playerNum = 1;
     public float currDamage = 0;
     public int weight = 100;
@@ -78,28 +74,29 @@ public class PlayerController : MonoBehaviour {
 
     //Character state variables
     public MoveStates moveState = MoveStates.STILL;
-    float groundLevel = -2.25F;
+    protected float groundLevel = -2.25F;
 
     //Character Attributes! These all change from character to character
-    float walkSpeed = 0.1F;
-    float traction = 0.01F;
-    float walkAccel = 0.01F;
-    float dashAccel = 0.01F;
+    protected float walkSpeed = 0.1F;
+    protected float traction = 0.01F;
+    protected float walkAccel = 0.01F;
+    protected float dashAccel = 0.01F;
 
-    float maxAirSpeed = 0.07F;
-    float airAccel = 0.006F;
-    float airDeccel = 0.004F ;
-    float jumpMomentum = 0.3F;
-    float fallSpeed = 0.0095F;
+    protected float maxAirSpeed = 0.07F;
+    protected float airAccel = 0.006F;
+    protected float airDeccel = 0.004F ;
+    protected float jumpMomentum = 0.3F;
+    protected float fallSpeed = 0.0095F;
 
-    float baseMaxFallSpeed = 0.2F;
+    protected float baseMaxFallSpeed = 0.2F;
     float maxFallSpeed;
 
-    int jumpCount = 1;
+    protected int jumpCount = 1;
     int jumpUsed = 0;
 
-    int jumpFrames = 4;
-    int turnFrames = 2;
+    protected int jumpFrames = 4;
+    protected int turnFrames = 2;
+
     int lagCount = 0;
 
     public Vector3 airMomentum = new Vector3(0, 0);
@@ -109,7 +106,7 @@ public class PlayerController : MonoBehaviour {
     public Vector3 knockbackMomentum = new Vector3(0, 0);
     public List<Attack> nullify = new List<Attack>();
     public int hitStunDuration = 0;
-    bool inHitstun = false;
+    protected bool inHitstun = false;
 
 
     public bool frameCancel = false;
@@ -135,6 +132,10 @@ public class PlayerController : MonoBehaviour {
     public Attack upBAttack = null;
     public int upBUsed = 0;
     public Attack nBAttack = null;
+
+    //Animations
+    public Material standing;
+    public Material hitstunned;
 
     void Start()
     {

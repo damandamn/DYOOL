@@ -4,11 +4,14 @@ using UnityEngine;
 
 public class GameData {
     //Contains info/functions for populating game data
+    public static bool visualizeHitboxes = true;
+    public static GameObject hitboxRenderPrefab;
 
     public static float stageHeight;
     public static float stageBottom;
     public static float stageWidth;
 
+    //Example kit
     public static Attack CreateExampleJabAttack(List<GameObject> hb)
     {
 
@@ -597,7 +600,105 @@ public class GameData {
         return bAirAttack;
     }
 
-    public static Attack CreateMultiHitFAirAttack(List<GameObject> hb)
+    public static Attack CreateExampleProjectileAttack(List<GameObject> hb)
+    {
+        List<MoveFrame> fd = new List<MoveFrame>();
+
+        //Startup - 25 frames
+        for (int i = 0; i < 25; i++)
+        {
+            fd.Add(new MoveFrame()
+            {
+                startupFrame = true,
+                canControl = true,
+                canFall = true
+            });
+        }
+
+        fd.Add(new MoveFrame()
+        {
+            spawnProjectile = true,
+            canControl = true,
+            canFall = true
+        });
+
+        //Endlag - 10 frames
+        for (int i = 0; i < 10; i++)
+        {
+            fd.Add(new MoveFrame()
+            {
+                endlagFrame = true,
+                canControl = true,
+                canFall = true
+            });
+        }
+
+        //FAF - 36
+        fd.Add(new MoveFrame()
+        {
+            lastFrame = true,
+            canControl = true,
+            canFall = true
+        });
+
+        Attack exampleProjectileAttack = new Attack(true, hb, fd)
+        {
+            projectile = hb[0],
+            destroyOnHit = true,
+            reverseFrames = 6,
+        };
+
+        return exampleProjectileAttack;
+    }
+
+    //Morganis kit
+    public static Attack CreateMorganisFTiltAttack(List<GameObject> hb)
+    {
+        List<MoveFrame> fd = new List<MoveFrame>();
+
+        //Startup - 5 frames
+        for (int i = 0; i < 10; i++)
+        {
+            fd.Add(new MoveFrame()
+            {
+                startupFrame = true
+            });
+        }
+
+        List<bool> activeHitboxes = new List<bool>()
+        {
+            true,
+            true
+        };
+        //Active - 2 frames
+        for (int i = 0; i < 2; i++)
+        {
+            fd.Add(new MoveFrame()
+            {
+                hitboxActive = true,
+                allHitboxesActive = activeHitboxes
+            });
+        }
+
+        //Endlag - 18 frames
+        for (int i = 0; i < 15; i++)
+        {
+            fd.Add(new MoveFrame()
+            {
+                endlagFrame = true
+            });
+        }
+
+        //FAF - 25
+        fd.Add(new MoveFrame()
+        {
+            lastFrame = true
+        });
+
+        return new Attack(hb, fd);
+    }
+
+    public static Attack CreateMorganisFAirAttack(List<GameObject> hb)
     {
         List<MoveFrame> fd = new List<MoveFrame>();
 
@@ -670,8 +771,8 @@ public class GameData {
         }
 
 
-        //Endlag - 11 frames (autocancel 6 frames)
-        for (int i = 0; i < 5; i++)
+        //Endlag - 11 frames (autocancel 8 frames)
+        for (int i = 0; i < 3; i++)
         {
             fd.Add(new MoveFrame()
             {
@@ -679,7 +780,7 @@ public class GameData {
             });
         }
 
-        for (int i = 0; i < 6; i++)
+        for (int i = 0; i < 8; i++)
         {
             fd.Add(new MoveFrame()
             {
@@ -703,7 +804,7 @@ public class GameData {
 
     }
 
-    public static Attack CreateExampleUpBAttack(List<GameObject> hb)
+    public static Attack CreateMorganisUpBAttack(List<GameObject> hb)
     {
         List<MoveFrame> fd = new List<MoveFrame>();
 
@@ -799,57 +900,6 @@ public class GameData {
 
         return UpBAttack;
 
-    }
-
-    public static Attack CreateExampleProjectileAttack(List<GameObject>hb)
-    {
-        List<MoveFrame> fd = new List<MoveFrame>();
-
-        //Startup - 25 frames
-        for (int i = 0; i < 25; i++)
-        {
-            fd.Add(new MoveFrame()
-            {
-                startupFrame = true,
-                canControl = true,
-                canFall = true
-            });
-        }
-
-        fd.Add(new MoveFrame()
-        {
-            spawnProjectile = true,
-            canControl = true,
-            canFall = true
-        });
-
-        //Endlag - 15 frames
-        for (int i = 0; i < 15; i++)
-        {
-            fd.Add(new MoveFrame()
-            {
-                endlagFrame = true,
-                canControl = true,
-                canFall = true
-            });
-        }
-
-        //FAF - 16
-        fd.Add(new MoveFrame()
-        {
-            lastFrame = true,
-            canControl = true,
-            canFall = true
-        });
-
-        Attack exampleProjectileAttack = new Attack(true, hb, fd)
-        {
-            projectile = hb[0],
-            destroyOnHit = true,
-            reverseFrames = 6,
-        };
-
-        return exampleProjectileAttack;
     }
 }
 

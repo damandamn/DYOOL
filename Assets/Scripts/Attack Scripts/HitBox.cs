@@ -6,6 +6,7 @@ public class HitBox : MonoBehaviour {
 
     public PlayerController user;
     public SphereCollider hitbox;
+    public bool isActive = false;
     public Attack attack;
 
     public int priority;
@@ -35,11 +36,16 @@ public class HitBox : MonoBehaviour {
         hitbox.radius = radius;
         if (hitboxType == "Projectile")
         {
-            hitbox.GetComponent<SphereCollider>().enabled = true;
+            hitbox.enabled = true;
         } else
         {
-            hitbox.GetComponent<SphereCollider>().enabled = false;
+            hitbox.enabled = false;
         }
+    }
+
+    private void Update()
+    {
+        isActive = hitbox.enabled;
     }
 
 

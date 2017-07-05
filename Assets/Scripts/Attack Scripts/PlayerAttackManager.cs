@@ -337,18 +337,37 @@ public class PlayerAttackManager : MonoBehaviour {
         {
             if (hitbox.GetComponent<HitBox>().hitboxType == "Attack")
             {
-                GameObject go = Instantiate(hitbox);
-
-                go.transform.parent = user.transform;
-                go.transform.position = user.transform.position;
-                go.transform.localScale = new Vector3(0.3F, 0.3F, 0.3F);
-                go.GetComponent<HitBox>().user = user;
-                currHitboxes.Add(go);
+                CreateHitbox(hitbox, user);
             }
 
 
         }
         allHitboxesDisabled = false;
+    }
+
+    public void CreateHitbox(GameObject hitbox, PlayerController user)
+    {
+        GameObject go = Instantiate(hitbox);
+
+        go.transform.parent = user.transform;
+        go.transform.position = user.transform.position;
+        go.transform.localScale = new Vector3(0.3F, 0.3F, 0.3F);
+        HitBox goHitbox = go.GetComponent<HitBox>();
+        goHitbox.user = user;
+
+        //Visualizes hitbox if neccesary
+        if (GameData.visualizeHitboxes)
+        {
+            GameObject hitboxSphere = Instantiate(GameData.hitboxRenderPrefab);
+            hitboxSphere.transform.parent = go.transform;
+
+            hitboxSphere.GetComponent<HitboxRender>().source = go;
+            hitboxSphere.GetComponent<HitboxRender>().material = hitboxSphere.GetComponent<Renderer>().material;
+
+            hitboxSphere.GetComponent<HitboxRender>().InitiateVisualization();
+        }
+
+        currHitboxes.Add(go);
     }
 
     //checks what to do at the start of each frame in an attack animation

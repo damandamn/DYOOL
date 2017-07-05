@@ -5,7 +5,8 @@ using UnityEngine;
 public class GameLoader : MonoBehaviour {
 
     public GameObject playerPrefab;
-    public GameObject HealthUI;
+    public GameObject morganisPrefab;
+    public GameObject healthUI;
 
     StageBuilder stagebuilder;
 
@@ -19,6 +20,7 @@ public class GameLoader : MonoBehaviour {
     public Material marshmallowStand;
     public Material marshmallowHitstun;
 
+    //Example Hitboxes
     public List<GameObject> jabHitboxes;
     public List<GameObject> fTiltHitboxes;
     public List<GameObject> uTiltHitboxes;
@@ -30,60 +32,29 @@ public class GameLoader : MonoBehaviour {
     public List<GameObject> fAirHitboxes;
     public List<GameObject> bAirHitboxes;
 
-    public List<GameObject> multiHitFAirHitboxes;
-    public List<GameObject> upBHitboxes;
+    //Morganis Hitboxes
+    public List<GameObject> morganisFTiltHitboxes;
+    public List<GameObject> morganisFAirHitboxes;
+
+    public List<GameObject> morganisUpBHitboxes;
     public List<GameObject> exampleProjectile;
 
     //Populates the Game's data using info/functions from GameData;
     void Start () {
+        LoadResources();
+
         hitmanager = GetComponent<HitManager>();
         stagebuilder = GetComponent<StageBuilder>();
 
-        player1 = Instantiate(playerPrefab).GetComponent<PlayerController>();
+        player1 = SpawnExamplePlayer();
         player1.playerNum = 1;
-        player2 = Instantiate(playerPrefab, new Vector3(5, -2.25F), Quaternion.identity, null).GetComponent<PlayerController>();
+        player2 = SpawnMorganis(new Vector3(5, -2.25F));
         player2.playerNum = 2;
 
         PlayerAttackManager.nullAttackLists.Add(player1.nullify);
         PlayerAttackManager.nullAttackLists.Add(player2.nullify);
 
-        player1.jabAttack = GameData.CreateExampleJabAttack(jabHitboxes);
-        player1.fTiltAttack = GameData.CreateExampleFTiltAttack(fTiltHitboxes);
-        player1.uTiltAttack = GameData.CreateExampleUTiltAttack(uTiltHitboxes);
-        player1.dTiltAttack = GameData.CreateExampleDTiltAttack(dTiltHitboxes);
-
-        player1.nAirAttack = GameData.CreateExampleNAirAttack(nAirHitboxes);
-        player1.dAirAttack = GameData.CreateExampleDAirAttack(dAirHitboxes);
-        player1.uAirAttack = GameData.CreateExampleUAirAttack(uAirHitboxes);
-        player1.fAirAttack = GameData.CreateMultiHitFAirAttack(multiHitFAirHitboxes);
-        player1.bAirAttack = GameData.CreateExampleBAirAttack(bAirHitboxes);
-
-        player1.upBAttack = GameData.CreateExampleUpBAttack(upBHitboxes);
-        player1.nBAttack = GameData.CreateExampleProjectileAttack(exampleProjectile);
-
-        player1.standing = marshmallowStand;
-        player1.hitstunned = marshmallowHitstun;
-
-
-        player2.jabAttack = GameData.CreateExampleJabAttack(jabHitboxes);
-        player2.fTiltAttack = GameData.CreateExampleFTiltAttack(fTiltHitboxes);
-        player2.uTiltAttack = GameData.CreateExampleUTiltAttack(uTiltHitboxes);
-        player2.dTiltAttack = GameData.CreateExampleDTiltAttack(dTiltHitboxes);
-
-        player2.nAirAttack = GameData.CreateExampleNAirAttack(nAirHitboxes);
-        player2.dAirAttack = GameData.CreateExampleDAirAttack(dAirHitboxes);
-        player2.uAirAttack = GameData.CreateExampleUAirAttack(uAirHitboxes);    
-        player2.fAirAttack = GameData.CreateMultiHitFAirAttack(multiHitFAirHitboxes);
-        player2.bAirAttack = GameData.CreateExampleBAirAttack(bAirHitboxes);
-
-        player2.upBAttack = GameData.CreateExampleUpBAttack(upBHitboxes);
-        player2.nBAttack = GameData.CreateExampleProjectileAttack(exampleProjectile);
-
-        player2.standing = marshmallowStand;
-        player2.hitstunned = marshmallowHitstun;
-
-
-        GameObject HUI = Instantiate(HealthUI);
+        GameObject HUI = Instantiate(healthUI);
 
         GameObject damageCounter1 = GameObject.Find("Player1Health");
         GameObject damageCounter2 = GameObject.Find("Player2Health");
@@ -92,5 +63,87 @@ public class GameLoader : MonoBehaviour {
         damageCounter2.GetComponent<DamageCounter>().damageSource = player2;
 
         stagebuilder.ConstructFlat();
+    }
+
+    void LoadResources()
+    {
+        GameData.hitboxRenderPrefab = (GameObject)Resources.Load("Prefabs/HitboxRenderPrefab");
+
+    }
+
+    public static Material SetAlpha(Material material, float value)
+    {
+        Color color = material.color;
+        color.a = value;
+        material.color = color;
+
+        return material;
+    }
+
+    //Instantiates an example player and populates their attacks/animations
+    PlayerController SpawnExamplePlayer(Vector3 spawnPosition = default(Vector3))
+    {
+        PlayerController player;
+        if (spawnPosition == default(Vector3))
+        {
+            player = Instantiate(playerPrefab).GetComponent<PlayerController>();
+        } else
+        {
+            player = Instantiate(playerPrefab, spawnPosition, Quaternion.identity, null).GetComponent<PlayerController>();
+        }
+        
+
+        player.jabAttack = GameData.CreateExampleJabAttack(jabHitboxes);
+        player.fTiltAttack = GameData.CreateExampleFTiltAttack(fTiltHitboxes);
+        player.uTiltAttack = GameData.CreateExampleUTiltAttack(uTiltHitboxes);
+        player.dTiltAttack = GameData.CreateExampleDTiltAttack(dTiltHitboxes);
+
+        player.nAirAttack = GameData.CreateExampleNAirAttack(nAirHitboxes);
+        player.dAirAttack = GameData.CreateExampleDAirAttack(dAirHitboxes);
+        player.uAirAttack = GameData.CreateExampleUAirAttack(uAirHitboxes);
+        player.fAirAttack = GameData.CreateExampleFAirAttack(fAirHitboxes);
+        player.bAirAttack = GameData.CreateExampleBAirAttack(bAirHitboxes);
+
+        player.upBAttack = GameData.CreateMorganisUpBAttack(morganisUpBHitboxes);
+        player.nBAttack = GameData.CreateExampleProjectileAttack(exampleProjectile);
+
+        player.standing = marshmallowStand;
+        player.hitstunned = marshmallowHitstun;
+
+        return player;
+    }
+
+    //Instantiates a Morganis player
+    PlayerController SpawnMorganis(Vector3 spawnPosition = default(Vector3))
+    {
+        MorganisController player;
+        if (spawnPosition == default(Vector3))
+        {
+            player = Instantiate(morganisPrefab).GetComponent<MorganisController>();
+        }
+        else
+        {
+            player = Instantiate(morganisPrefab, spawnPosition, Quaternion.identity, null).GetComponent<MorganisController>();
+        }
+
+
+        player.jabAttack = GameData.CreateExampleJabAttack(jabHitboxes);
+        player.fTiltAttack = GameData.CreateMorganisFTiltAttack(morganisFTiltHitboxes);
+        player.uTiltAttack = GameData.CreateExampleUTiltAttack(uTiltHitboxes);
+        player.dTiltAttack = GameData.CreateExampleDTiltAttack(dTiltHitboxes);
+
+        player.nAirAttack = GameData.CreateExampleNAirAttack(nAirHitboxes);
+        player.dAirAttack = GameData.CreateExampleDAirAttack(dAirHitboxes);
+        player.uAirAttack = GameData.CreateExampleUAirAttack(uAirHitboxes);
+        player.fAirAttack = GameData.CreateMorganisFAirAttack(morganisFAirHitboxes);
+        player.bAirAttack = GameData.CreateExampleBAirAttack(bAirHitboxes);
+
+        player.upBAttack = GameData.CreateMorganisUpBAttack(morganisUpBHitboxes);
+        player.nBAttack = GameData.CreateExampleProjectileAttack(exampleProjectile);
+
+        player.standing = marshmallowStand;
+        player.hitstunned = marshmallowHitstun;
+
+        return player;
     }
 }
