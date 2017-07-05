@@ -32,8 +32,12 @@ public class GameLoader : MonoBehaviour {
     public List<GameObject> fAirHitboxes;
     public List<GameObject> bAirHitboxes;
 
+    public List<GameObject> upBHitboxes;
+
     //Morganis Hitboxes
+    public List<GameObject> morganisJabHitboxes;
     public List<GameObject> morganisFTiltHitboxes;
+    public List<GameObject> morganisNAirHitboxes;
     public List<GameObject> morganisFAirHitboxes;
 
     public List<GameObject> morganisUpBHitboxes;
@@ -104,7 +108,7 @@ public class GameLoader : MonoBehaviour {
         player.fAirAttack = GameData.CreateExampleFAirAttack(fAirHitboxes);
         player.bAirAttack = GameData.CreateExampleBAirAttack(bAirHitboxes);
 
-        player.upBAttack = GameData.CreateMorganisUpBAttack(morganisUpBHitboxes);
+        player.upBAttack = GameData.CreateExampleUpBAttack(upBHitboxes);
         player.nBAttack = GameData.CreateExampleProjectileAttack(exampleProjectile);
 
         player.standing = marshmallowStand;
@@ -127,12 +131,12 @@ public class GameLoader : MonoBehaviour {
         }
 
 
-        player.jabAttack = GameData.CreateExampleJabAttack(jabHitboxes);
+        player.jabAttack = GameData.CreateMorganisJabAttack(morganisJabHitboxes);
         player.fTiltAttack = GameData.CreateMorganisFTiltAttack(morganisFTiltHitboxes);
         player.uTiltAttack = GameData.CreateExampleUTiltAttack(uTiltHitboxes);
         player.dTiltAttack = GameData.CreateExampleDTiltAttack(dTiltHitboxes);
 
-        player.nAirAttack = GameData.CreateExampleNAirAttack(nAirHitboxes);
+        player.nAirAttack = GameData.CreateMorganisNAirAttack(morganisNAirHitboxes);
         player.dAirAttack = GameData.CreateExampleDAirAttack(dAirHitboxes);
         player.uAirAttack = GameData.CreateExampleUAirAttack(uAirHitboxes);
         player.fAirAttack = GameData.CreateMorganisFAirAttack(morganisFAirHitboxes);

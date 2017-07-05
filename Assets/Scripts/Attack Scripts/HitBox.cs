@@ -32,9 +32,10 @@ public class HitBox : MonoBehaviour {
         gameObject.tag = "Hitbox";
 
         hitbox = gameObject.AddComponent<SphereCollider>();
+        hitbox.isTrigger = true;
         hitbox.center = new Vector3(-offset.x, offset.y);
         hitbox.radius = radius;
-        if (hitboxType == "Projectile")
+        if (hitboxType == "Projectile" || hitboxType == "Collateral")
         {
             hitbox.enabled = true;
         } else
@@ -63,6 +64,14 @@ public class HitBox : MonoBehaviour {
             {
                 hit = other;
                 user.pam.PrioritizeHit(this);
+            }
+        }
+        else
+        if (other.gameObject.tag == "Hitbox")
+        {
+            if (attack.destroyOnHit)
+            {
+                Destroy(gameObject);
             }
         }
     }

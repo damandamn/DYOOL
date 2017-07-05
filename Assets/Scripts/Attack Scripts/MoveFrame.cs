@@ -15,7 +15,7 @@ public class MoveFrame {
 
     public bool reHit = false;
     public bool autoCancel = false;
-    public bool cancelable = false;
+    public bool cancelable = true;
     public bool lastFrame = false;
     public Vector3 userMovement = Vector3.zero;
 
@@ -24,4 +24,5 @@ public class MoveFrame {
     public bool canControl = false;
     public bool canFall = false;
     public GameObject projectile;
+    public bool setAirMomentum = false;
 }

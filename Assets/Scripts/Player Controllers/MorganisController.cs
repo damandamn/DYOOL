@@ -10,9 +10,9 @@ public class MorganisController : PlayerController {
     protected float morganisDashAccel = 0.012F;
 
     protected float morganisMaxAirSpeed = 0.065F;
-    protected float morganisAirAccel = 0.006F;
-    protected float morganisAirDeccel = 0.004F;
-    protected float morganisJumpMomentum = 0.33F;
+    protected float morganisAirAccel = 0.005F;
+    protected float morganisAirDeccel = 0.0035F;
+    protected float morganisJumpMomentum = 0.35F;
     protected float morganisFallSpeed = 0.012F;
 
     protected float morganisBaseMaxFallSpeed = 0.25F;
@@ -48,4 +48,60 @@ public class MorganisController : PlayerController {
         turnFrames = morganisTurnFrames;
 }
 
+    public override IEnumerator Hitlag(int duration, float knockbackValue, int hitstun, float angle, PlayerController sender = null, bool attacker = false)
+    {
+        if (frameCancel)
+        {
+            yield break;
+        }
+
+        if (!attacker)
+        {
+            upBUsed = 0;
+        }
+
+        //remembers whether the attacker was using an aerial or not
+        bool aerialReturn = false;
+        if (attacker)
+        {
+            if (moveState == MoveStates.AERIAL)
+            {
+                aerialReturn = true;
+            }
+        }
+        else
+        {
+            InterruptAttack();
+        }
+        moveState = MoveStates.HITLAG;
+
+        for (int i = 0; i < duration; i++)
+        {
+            yield return null;
+        }
+
+        if (attacker)
+        {
+            if (currAttack != null)
+            {
+                if (aerialReturn)
+                {
+                    moveState = MoveStates.AERIAL;
+                }
+                else
+                {
+                    moveState = MoveStates.ATTACK;
+                }
+            }
+        }
+        else
+        {
+            //begin launch
+            knockbackMomentum = GameLoader.hitmanager.CalculateLaunch(knockbackValue, angle, fallSpeed, sender);
+            hitStunDuration = hitstun;
+
+            inHitstun = false;
+            moveState = MoveStates.HITSTUN;
+        }
+    }
 }

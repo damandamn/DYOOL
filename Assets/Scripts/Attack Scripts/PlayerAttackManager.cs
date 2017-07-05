@@ -374,7 +374,7 @@ public class PlayerAttackManager : MonoBehaviour {
     public void RunAttackFrame(PlayerController user, Attack attack, int frame)
     {
         MoveFrame attackFrame = attack.frameData[frame];
-        
+
         //B-reversing in the first few frames of a move
         if (attack.special && attack.reversable && frame < attack.reverseFrames)
         {
@@ -397,9 +397,10 @@ public class PlayerAttackManager : MonoBehaviour {
         }
 
         //moves the user by the frames specified vector, if any
-        if (attackFrame.userMovement != Vector3.zero)
+        if (attackFrame.userMovement != Vector3.zero && user.moveState != PlayerController.MoveStates.HITLAG)
         {
             Vector3 tempMovement;
+
             if (user.isFacingLeft)
             {
                 tempMovement = new Vector3(attackFrame.userMovement.x, attackFrame.userMovement.y);
@@ -408,22 +409,29 @@ public class PlayerAttackManager : MonoBehaviour {
                 tempMovement = new Vector3(-attackFrame.userMovement.x, attackFrame.userMovement.y);
             }
 
+            if (user.isGrounded)
+            {
+                user.transform.Translate(tempMovement);
+            }
+
             if (attack.aerial) {
                 user.airMomentum = tempMovement;
             }
             else
             if (attack.special)
             {
-                user.transform.Translate(tempMovement);
-            }
-            else
-            {
-                user.transform.Translate(tempMovement);
+                if (attackFrame.setAirMomentum)
+                {
+                    user.transform.Translate(tempMovement);
+                } else
+                {
+                    user.airMomentum += tempMovement;
+                }
             }
             
         }
         //allows for multihit moves. Always put rehit on an inactive frame
-        if (attackFrame.reHit)
+        if (attackFrame.reHit && user.moveState != PlayerController.MoveStates.HITLAG)
         {
             foreach (List<Attack> nullify in nullAttackLists)
             {
@@ -445,11 +453,16 @@ public class PlayerAttackManager : MonoBehaviour {
         }
 
         //runs on frames that spawn projectiles
-        if (attackFrame.spawnProjectile)
+        if (attackFrame.spawnProjectile && user.moveState != PlayerController.MoveStates.HITLAG)
         {
             attack.projectile.GetComponent<HitBox>().user = user;
             Projectile proj = attack.projectile.GetComponent<Projectile>();
             proj.user = user;
+
+            foreach (GameObject go in attack.hitBoxes)
+            {
+                go.GetComponent<HitBox>().user = user;
+            }
 
             if (!user.isFacingLeft)
             {
@@ -537,16 +550,8 @@ public class PlayerAttackManager : MonoBehaviour {
     {
         yield return new WaitForEndOfFrame();
         HitBox sender = hits[0];
-        if (hitCount == 1)
-        {
-            sender.hit.GetComponent<PlayerController>().nullify.Add(sender.attack);
-            GameLoader.hitmanager.CalculateHit(sender, sender.user, sender.hit.GetComponent<PlayerController>());
-            if (sender.attack.destroyOnHit)
-            {
-                Destroy(sender.gameObject);
-            }
-        } else
-        {
+        if (hitCount > 1)
+        { 
             foreach (HitBox h in hits)
             {
                 if (h.priority < sender.priority)
@@ -554,9 +559,29 @@ public class PlayerAttackManager : MonoBehaviour {
                     sender = h;
                 }
             }
-            sender.hit.GetComponent<PlayerController>().nullify.Add(sender.attack);
-            GameLoader.hitmanager.CalculateHit(sender, sender.user, sender.hit.GetComponent<PlayerController>());
         }
+
+        //Destroys hitbox if applicable
+        if (sender.attack.destroyOnHit)
+        {
+            if (sender.hitboxType == "Collateral")
+            {
+                Debug.Log("hi");
+                foreach (Transform child in sender.transform.parent)
+                {
+                    Destroy(child.gameObject);
+                }
+                Destroy(sender.transform.parent.gameObject);
+            }
+            else
+            {
+                Destroy(sender.gameObject);
+            }
+        }
+
+        sender.hit.GetComponent<PlayerController>().nullify.Add(sender.attack);
+        GameLoader.hitmanager.CalculateHit(sender, sender.user, sender.hit.GetComponent<PlayerController>());
+
         hitCount = 0;
         hitThisFrame = false;
     }

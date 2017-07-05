@@ -82,9 +82,9 @@ public class PlayerController : MonoBehaviour {
     protected float walkAccel = 0.01F;
     protected float dashAccel = 0.01F;
 
-    protected float maxAirSpeed = 0.07F;
-    protected float airAccel = 0.006F;
-    protected float airDeccel = 0.004F ;
+    protected float maxAirSpeed = 0.08F;
+    protected float airAccel = 0.0065F;
+    protected float airDeccel = 0.0042F ;
     protected float jumpMomentum = 0.3F;
     protected float fallSpeed = 0.0095F;
 
@@ -623,7 +623,7 @@ public class PlayerController : MonoBehaviour {
                 //transform.Translate(new Vector3(0, airMomentum.y));
             }
         }
-        if ((PreventClipping() || isGrounded) && currAttack.groundCancel)
+        if ((PreventClipping() || isGrounded) && currAttack.groundCancel && currAttack.frameData[currAttackFrame].cancelable)
         {
             EndAttack();
             frameCancel = true;
@@ -656,7 +656,7 @@ public class PlayerController : MonoBehaviour {
             Land();
             if (knockbackMomentum.y < -maxFallSpeed * 1.6)
             {
-                knockbackMomentum.y = -knockbackMomentum.y * 0.75F;
+                knockbackMomentum.y = -knockbackMomentum.y * 0.6F;
                 hitStunDuration += 10;
             }
             else
@@ -670,7 +670,7 @@ public class PlayerController : MonoBehaviour {
         {
             if (knockbackMomentum.x > 0)
             {
-                knockbackMomentum.x -= traction;
+                knockbackMomentum.x -= traction / 2;
                 if (knockbackMomentum.x < 0)
                 {
                     knockbackMomentum.x = 0;
@@ -678,7 +678,7 @@ public class PlayerController : MonoBehaviour {
             }
             else if (knockbackMomentum.x < 0)
             {
-                knockbackMomentum.x += traction;
+                knockbackMomentum.x += traction / 2;
                 if (knockbackMomentum.x > 0)
                 {
                     knockbackMomentum.x = 0;
@@ -689,20 +689,30 @@ public class PlayerController : MonoBehaviour {
     }
 
     //called when hitlag starts, signals end of hitlag
-    public IEnumerator Hitlag(int duration, float knockbackValue, int hitstun, float angle, PlayerController sender = null, bool attacker = false)
+    public virtual IEnumerator Hitlag(int duration, float knockbackValue, int hitstun, float angle, PlayerController sender = null, bool attacker = false)
     {
         if (frameCancel)
         {
             yield break;
         }
 
-        //remembers whether the attacker was using an aerial or not
-        bool aerialReturn = false;
+
+
+        //remembers the attackers state; 0 ATTACK, 1 AERIAL, 2 SPECIALMOVE
+        int returnID = 0;
         if (attacker)
         {
+            if (moveState == MoveStates.ATTACK)
+            {
+                returnID = 0;
+            }
             if (moveState == MoveStates.AERIAL)
             {
-                aerialReturn = true;
+                returnID = 1;
+            }
+            else if (moveState == MoveStates.SPECIALMOVE)
+            {
+                returnID = 2;
             }
         }
         else
@@ -720,13 +730,20 @@ public class PlayerController : MonoBehaviour {
         {
             if (currAttack != null)
             {
-                if (aerialReturn)
+                switch (returnID)
                 {
-                    moveState = MoveStates.AERIAL;
-                }
-                else
-                {
-                    moveState = MoveStates.ATTACK;
+                    case 0:
+                        moveState = MoveStates.ATTACK;
+                        break;
+
+                    case 1:
+                        moveState = MoveStates.AERIAL;
+                        break;
+
+                    case 2:
+                        moveState = MoveStates.SPECIALMOVE;
+                        break;
+
                 }
             }
         }
@@ -742,9 +759,9 @@ public class PlayerController : MonoBehaviour {
     }
 
     //called when hitstun starts, signals end of hitstun
-    public IEnumerator Hitstun()
+    public virtual IEnumerator Hitstun()
     {
-        if ((isGrounded || PreventClipping()) && Mathf.Abs(knockbackMomentum.y) < 0.08F)
+        if ((isGrounded || PreventClipping()) && Mathf.Abs(knockbackMomentum.y) < 0.15F)
         {
             knockbackMomentum.y = 0;
         }
@@ -775,7 +792,7 @@ public class PlayerController : MonoBehaviour {
     }
 
     //Returns true if clipping was prevented
-    bool PreventClipping()
+    protected bool PreventClipping()
     {
         if (transform.position.y <= groundLevel)
         {

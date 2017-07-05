@@ -24,10 +24,10 @@ public class HitManager : MonoBehaviour {
         //forces enemy to face attacker
         if (user.transform.position.x < enemy.transform.position.x)
         {
-            enemy.isFacingLeft = true;
+            enemy.isFacingLeft = false;
         } else
         {
-            enemy.isFacingLeft = false;
+            enemy.isFacingLeft = true;
         }
 
         float modifiedKBG = attack.growthKnockback / 2;
@@ -36,7 +36,7 @@ public class HitManager : MonoBehaviour {
         //30 kbk, 10 kbg, 3 damage, 10 percent and 100 weight on enemy = 40
         knockbackValue += (modifiedKBG * growth);
         knockbackValue *= (2 - (enemy.weight / 100));
-        knockbackValue *= 1 + (attack.damage / 100);
+        knockbackValue *= 1 + ((3 * attack.damage) / 100);
         knockbackValue += attack.baseKnockback;
 
         //hitstun duration formula. Improve on this! 
@@ -62,7 +62,7 @@ public class HitManager : MonoBehaviour {
         StartCoroutine(playersInHitlag[enemy]);
 
         //no hitlag for attacker if they used a projectile
-        if (attack.hitboxType != "Projectile")
+        if (attack.hitboxType == "Attack")
         {
             playersInHitlag[user] = user.Hitlag(attack.hitlag + (int)attack.damage, knockbackValue, hitstunDuration, angle, null, true);
             StartCoroutine(playersInHitlag[user]);
@@ -110,15 +110,34 @@ public class HitManager : MonoBehaviour {
         {
             if (user.isFacingLeft)
             {
-                if (user.transform.position.x > enemy.transform.position.x)
+                if (attack.angle < 90)
                 {
-                    angle = 180 - angle;
+                    if (user.transform.position.x > enemy.transform.position.x)
+                    {
+                        angle = 180 - angle;
+                    }
+                }
+                else
+                {
+                    if (user.transform.position.x < enemy.transform.position.x)
+                    {
+                        angle = 180 - angle;
+                    }
                 }
             } else
             {
-                if (user.transform.position.x < enemy.transform.position.x)
+                if (attack.angle < 90)
                 {
-                    angle = 180 - angle;
+                    if (user.transform.position.x < enemy.transform.position.x)
+                    {
+                        angle = 180 - angle;
+                    }
+                } else
+                {
+                    if (user.transform.position.x > enemy.transform.position.x)
+                    {
+                        angle = 180 - angle;
+                    }
                 }
             }
         }
