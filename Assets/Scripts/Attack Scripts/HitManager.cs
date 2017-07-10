@@ -12,7 +12,7 @@ public class HitManager : MonoBehaviour {
         enemy.currDamage += attack.damage;
         float knockbackValue = 0;
         float growth = (enemy.currDamage / 100);
-        float multiplier = 2 - (enemy.weight / 100);
+        float weightMultiplier = 2 - (enemy.weight / 100);
         float angle = attack.angle;
         if (angle < 360)
         {
@@ -35,7 +35,7 @@ public class HitManager : MonoBehaviour {
         //30 BKB, 100 KBG, 10 damage, 100 percent and 100 weight on enemy = 140
         //30 kbk, 10 kbg, 3 damage, 10 percent and 100 weight on enemy = 40
         knockbackValue += (modifiedKBG * growth);
-        knockbackValue *= (2 - (enemy.weight / 100));
+        knockbackValue *= weightMultiplier;
         knockbackValue *= 1 + ((3 * attack.damage) / 100);
         knockbackValue += attack.baseKnockback;
 

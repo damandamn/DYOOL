@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class MoveFrame {
 
+    public bool playSound = false;
+    public AudioClip frameSound = null;
+
     public bool startupFrame = false;
     public bool endlagFrame = false;
 
@@ -18,6 +21,8 @@ public class MoveFrame {
     public bool cancelable = true;
     public bool lastFrame = false;
     public Vector3 userMovement = Vector3.zero;
+    public Vector3 userGroundMovement = Vector3.zero;
+    public bool iFrame = false;
 
     //for special moves
     public bool spawnProjectile = false;

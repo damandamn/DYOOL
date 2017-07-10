@@ -32,6 +32,8 @@ public class GameLoader : MonoBehaviour {
     public List<GameObject> fAirHitboxes;
     public List<GameObject> bAirHitboxes;
 
+    public List<GameObject> neutralBHitboxes;
+    public List<GameObject> exampleProjectile;
     public List<GameObject> upBHitboxes;
 
     //Morganis Hitboxes
@@ -39,9 +41,13 @@ public class GameLoader : MonoBehaviour {
     public List<GameObject> morganisFTiltHitboxes;
     public List<GameObject> morganisNAirHitboxes;
     public List<GameObject> morganisFAirHitboxes;
+    public List<GameObject> morganisUAirHitboxes;
+    public List<GameObject> morganisBAirHitboxes;
 
+    public List<GameObject> morganisProjectile;
     public List<GameObject> morganisUpBHitboxes;
-    public List<GameObject> exampleProjectile;
+    public List<GameObject> morganisSideBHitboxes;
+
 
     //Populates the Game's data using info/functions from GameData;
     void Start () {
@@ -58,7 +64,8 @@ public class GameLoader : MonoBehaviour {
         PlayerAttackManager.nullAttackLists.Add(player1.nullify);
         PlayerAttackManager.nullAttackLists.Add(player2.nullify);
 
-        GameObject HUI = Instantiate(healthUI);
+        //not needed for now
+        /*GameObject HUI =*/ Instantiate(healthUI);
 
         GameObject damageCounter1 = GameObject.Find("Player1Health");
         GameObject damageCounter2 = GameObject.Find("Player2Health");
@@ -72,6 +79,14 @@ public class GameLoader : MonoBehaviour {
     void LoadResources()
     {
         GameData.hitboxRenderPrefab = (GameObject)Resources.Load("Prefabs/HitboxRenderPrefab");
+
+        AudioContainer.swordDraw1 = (AudioClip)Resources.Load("Audio/Sound Effects/swordDraw1");
+        AudioContainer.swordDraw2 = (AudioClip)Resources.Load("Audio/Sound Effects/swordDraw2");
+        AudioContainer.whiff1 = (AudioClip)Resources.Load("Audio/Sound Effects/whiff1");
+        AudioContainer.whiff2 = (AudioClip)Resources.Load("Audio/Sound Effects/whiff2");
+        AudioContainer.swordWhiff1 = (AudioClip)Resources.Load("Audio/Sound Effects/swordWhiff1");
+        AudioContainer.swordWhiff2 = (AudioClip)Resources.Load("Audio/Sound Effects/swordWhiff2");
+        AudioContainer.ringing1 = (AudioClip)Resources.Load("Audio/Sound Effects/ringing1");
 
     }
 
@@ -109,7 +124,10 @@ public class GameLoader : MonoBehaviour {
         player.bAirAttack = GameData.CreateExampleBAirAttack(bAirHitboxes);
 
         player.upBAttack = GameData.CreateExampleUpBAttack(upBHitboxes);
-        player.nBAttack = GameData.CreateExampleProjectileAttack(exampleProjectile);
+        player.neutralBAttack = GameData.CreateExampleNeutralBAttack(neutralBHitboxes);
+        //player.neutralBAttackAerial = GameData.CreateAerialExampleProjectileAttack(exampleProjectile);
+        player.sideBAttack = GameData.CreateGroundedExampleProjectileAttack(exampleProjectile);
+        player.sideBAttackAerial = GameData.CreateAerialExampleProjectileAttack(exampleProjectile);
 
         player.standing = marshmallowStand;
         player.hitstunned = marshmallowHitstun;
@@ -138,12 +156,14 @@ public class GameLoader : MonoBehaviour {
 
         player.nAirAttack = GameData.CreateMorganisNAirAttack(morganisNAirHitboxes);
         player.dAirAttack = GameData.CreateExampleDAirAttack(dAirHitboxes);
-        player.uAirAttack = GameData.CreateExampleUAirAttack(uAirHitboxes);
+        player.uAirAttack = GameData.CreateMorganisUAirAttack(morganisUAirHitboxes);
         player.fAirAttack = GameData.CreateMorganisFAirAttack(morganisFAirHitboxes);
-        player.bAirAttack = GameData.CreateExampleBAirAttack(bAirHitboxes);
+        player.bAirAttack = GameData.CreateMorganisBAirAttack(morganisBAirHitboxes);
 
         player.upBAttack = GameData.CreateMorganisUpBAttack(morganisUpBHitboxes);
-        player.nBAttack = GameData.CreateExampleProjectileAttack(exampleProjectile);
+        player.upBAttackAerial = GameData.CreateAerialMorganisUpBAttack(morganisUpBHitboxes);
+        player.neutralBAttack = GameData.CreateMorganisProjectileAttack(morganisProjectile);
+        player.sideBAttack = GameData.CreateMorganisSideBAttack(morganisSideBHitboxes);
 
         player.standing = marshmallowStand;
         player.hitstunned = marshmallowHitstun;

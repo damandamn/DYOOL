@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class MorganisController : PlayerController {
 
-    protected float morganisWalkSpeed = 0.12F;
+    protected float morganisWalkSpeed = 0.14F;
     protected float morganisTraction = 0.01F;
     protected float morganisWalkAccel = 0.012F;
     protected float morganisDashAccel = 0.012F;
@@ -27,6 +27,8 @@ public class MorganisController : PlayerController {
         pgh = GetComponent<PlayerGroundHandler>();
         pam = GetComponent<PlayerAttackManager>();
         render = GetComponent<Renderer>();
+        hurtBox = GetComponent<Collider>();
+        soundPlayer = GetComponent<AudioSource>();
 
         //Sets PlayerController variables to character specifics
         walkSpeed = morganisWalkSpeed;

@@ -19,6 +19,7 @@ public class Projectile : MonoBehaviour {
         if (user.isFacingLeft)
         {
             useVelocity = new Vector3(-velocity.x, velocity.y);
+            transform.localScale = new Vector3(-transform.localScale.x, transform.localScale.y, transform.localScale.z);
         }
         else
         {

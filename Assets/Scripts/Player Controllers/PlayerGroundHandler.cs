@@ -6,8 +6,6 @@ public class PlayerGroundHandler : MonoBehaviour {
 
     public Platform nextPlat;
     public float platHeight;
-
-    bool grounded = true;
     public Collider col;
 
     public LayerMask platforms;

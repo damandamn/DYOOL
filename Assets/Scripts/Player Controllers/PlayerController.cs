@@ -25,6 +25,8 @@ public class PlayerController : MonoBehaviour {
     public PlayerGroundHandler pgh;
     public PlayerAttackManager pam;
     public Renderer render;
+    public Collider hurtBox;
+    public AudioSource soundPlayer;
 
     public int playerNum = 1;
     public float currDamage = 0;
@@ -82,9 +84,9 @@ public class PlayerController : MonoBehaviour {
     protected float walkAccel = 0.01F;
     protected float dashAccel = 0.01F;
 
-    protected float maxAirSpeed = 0.08F;
-    protected float airAccel = 0.0065F;
-    protected float airDeccel = 0.0042F ;
+    protected float maxAirSpeed = 0.09F;
+    protected float airAccel = 0.007F;
+    protected float airDeccel = 0.0045F ;
     protected float jumpMomentum = 0.3F;
     protected float fallSpeed = 0.0095F;
 
@@ -108,12 +110,12 @@ public class PlayerController : MonoBehaviour {
     public int hitStunDuration = 0;
     protected bool inHitstun = false;
 
-
     public bool frameCancel = false;
 
     public bool isGrounded = true;
     public bool fastFalling = false;
     public bool isFacingLeft = false;
+    public bool isInvincible = false;
 
     public Attack currAttack = null;
     public int currAttackFrame = 0;
@@ -130,8 +132,13 @@ public class PlayerController : MonoBehaviour {
     public Attack bAirAttack = null;
 
     public Attack upBAttack = null;
+    public Attack upBAttackAerial = null;
     public int upBUsed = 0;
-    public Attack nBAttack = null;
+    public Attack neutralBAttack = null;
+    public Attack neutralBAttackAerial = null;
+    public Attack sideBAttack = null;
+    public Attack sideBAttackAerial = null;
+    public int sideBUsed = 0;
 
     //Animations
     public Material standing;
@@ -142,6 +149,8 @@ public class PlayerController : MonoBehaviour {
         pgh = GetComponent<PlayerGroundHandler>();
         pam = GetComponent<PlayerAttackManager>();
         render = GetComponent<Renderer>();
+        hurtBox = GetComponent<Collider>();
+        soundPlayer = GetComponent<AudioSource>();
     }
 
     //Update is called once per frame
@@ -151,6 +160,8 @@ public class PlayerController : MonoBehaviour {
         {
             Death();
         }
+
+        hurtBox.enabled = !isInvincible;
 
         //checks at the beginning and end of Update()
         pgh.UpdatePlatform();
@@ -185,11 +196,17 @@ public class PlayerController : MonoBehaviour {
         }
         else
         {
-            airMomentum = Vector3.zero;
-            if (isGrounded == false && airMomentum.y <= 0)
+            if (isGrounded == false && airMomentum.y <= 0 && knockbackMomentum.y <= 0)
             {
                 Land();
             }
+        }
+
+        if (isGrounded && moveState != MoveStates.SPECIALMOVE)
+        {
+            jumpUsed = 0;
+            upBUsed = 0;
+            sideBUsed = 0;
         }
 
         //MOVESTATE = HITLAG
@@ -203,7 +220,10 @@ public class PlayerController : MonoBehaviour {
             {
                 transform.position += new Vector3(Random.Range(-0.02F, 0.02F), Random.Range(-0.02F, 0.02F));
             }
-            PreventClipping();
+            if (PreventClipping())
+            {
+                Land();
+            }
         }
 
         //MOVESTATE = HITSTUN
@@ -554,6 +574,7 @@ public class PlayerController : MonoBehaviour {
 
         if (PreventClipping() || isGrounded)
         {
+            Land();
             EndAttack();
             frameCancel = true;
             return;
@@ -623,7 +644,7 @@ public class PlayerController : MonoBehaviour {
                 //transform.Translate(new Vector3(0, airMomentum.y));
             }
         }
-        if ((PreventClipping() || isGrounded) && currAttack.groundCancel && currAttack.frameData[currAttackFrame].cancelable)
+        if ((PreventClipping()) && currAttack.groundCancel && currAttack.frameData[currAttackFrame].cancelable)
         {
             EndAttack();
             frameCancel = true;
@@ -693,10 +714,9 @@ public class PlayerController : MonoBehaviour {
     {
         if (frameCancel)
         {
+            Debug.Log("Frame Cancel? What a god");
             yield break;
         }
-
-
 
         //remembers the attackers state; 0 ATTACK, 1 AERIAL, 2 SPECIALMOVE
         int returnID = 0;
@@ -717,6 +737,8 @@ public class PlayerController : MonoBehaviour {
         }
         else
         {
+            upBUsed = 0;
+            sideBUsed = 0;
             InterruptAttack();
         }
         moveState = MoveStates.HITLAG;
@@ -796,8 +818,8 @@ public class PlayerController : MonoBehaviour {
     {
         if (transform.position.y <= groundLevel)
         {
-            isGrounded = true;
-            transform.position = new Vector3(transform.position.x, groundLevel);
+            //Land();
+            
             return true;
 
         }
@@ -880,13 +902,17 @@ public class PlayerController : MonoBehaviour {
     //called on first frame of landing
     void Land()
     {
-        PreventClipping();
-        isGrounded = true;
-        groundMomentum.x = airMomentum.x;
-        airMomentum = new Vector3(0, 0);
-        jumpUsed = 0;
-        upBUsed = 0;
-        fastFalling = false;
+        if (airMomentum.y <= 0 && knockbackMomentum.y <= 0)
+        {
+            transform.position = new Vector3(transform.position.x, groundLevel);
+            isGrounded = true;
+            groundMomentum.x = airMomentum.x;
+            airMomentum = Vector3.zero;
+            jumpUsed = 0;
+            upBUsed = 0;
+            sideBUsed = 0;
+            fastFalling = false;
+        }
     }
 
     //Slows groundMomentum by traction
@@ -956,6 +982,20 @@ public class PlayerController : MonoBehaviour {
 
         currAttack = null;
         currAttackFrame = 0;
+    }
+
+    public void MakeInvincible(bool reverse = false)
+    {
+        if (reverse)
+        {
+            isInvincible = false;
+        }
+        else
+        {
+            isInvincible = true;
+        }
+
+        hurtBox.enabled = !isInvincible;
     }
 
     //returns true if the player is outside the bounds of the stage. Note that if the player is above the top of the stage, they must also be in HITSTUN
@@ -1093,5 +1133,13 @@ public class PlayerController : MonoBehaviour {
         }
     }
 
-    //TODO More movement options (dash, dodge), Wall Collisions, Ledges, Blocking, 
+    public void PlaySound(AudioClip sound, float volume = 0.7F)
+    {
+        soundPlayer.clip = sound;
+        soundPlayer.pitch = Random.Range(0.8F, 1.4F);
+        soundPlayer.volume = volume;
+        soundPlayer.Play();
+    }
+
+    //TODO Combo counter, Improved animation support (switch to sprites), More movement options (dash, dodge), Wall Collisions, Ledges, Blocking, 
 }

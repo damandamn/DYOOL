@@ -9,6 +9,10 @@ public class HitBox : MonoBehaviour {
     public bool isActive = false;
     public Attack attack;
 
+    public AudioSource AS;
+    public AudioClip hitSound;
+    public float hitSoundVolume = 1F;
+
     public int priority;
     public Collider hit;
 
@@ -42,11 +46,28 @@ public class HitBox : MonoBehaviour {
         {
             hitbox.enabled = false;
         }
+        
+        //Weird solution but I cant find a better one: creates a separate object to play sound, which is deleted after 5 seconds
+        //Or at the end of playing its sound clip
+        if (hitSound != null)
+        {
+            AS = new GameObject().AddComponent<AudioSource>();
+            AS.clip = hitSound;
+            AS.volume = hitSoundVolume;
+            Destroy(AS.gameObject, 5);
+        }
     }
 
     private void Update()
     {
         isActive = hitbox.enabled;
+    }
+
+    public void PlaySound()
+    {
+        AS.pitch = Random.Range(0.9F, 1.1F);
+        AS.Play();
+        Destroy(AS.gameObject, hitSound.length);
     }
 
 

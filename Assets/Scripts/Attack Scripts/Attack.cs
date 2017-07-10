@@ -17,7 +17,8 @@ public class Attack {
     public bool reversable = true;
     public int reverseFrames = 0;
     public int aerialUses = 1;
-    public bool restoreOnHit;
+    public bool restoreOnHit = false;
+    public bool endlagOnHit = false;
     public bool groundCancel = false;
     public bool specialFall = false;
 
