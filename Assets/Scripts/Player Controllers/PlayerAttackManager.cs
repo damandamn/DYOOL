@@ -343,6 +343,11 @@ public class PlayerAttackManager : MonoBehaviour {
         }
     }
 
+    public void UseDefensiveOption(PlayerController user)
+    {
+        StartAttack(user, user.airdodge);
+    }
+
     //initiates a specified attack
     protected void StartAttack(PlayerController user, Attack attack)
     {
@@ -628,7 +633,6 @@ public class PlayerAttackManager : MonoBehaviour {
         {
             if (sender.hitboxType == "Collateral")
             {
-                Debug.Log("hi");
                 foreach (Transform child in sender.transform.parent)
                 {
                     Destroy(child.gameObject);

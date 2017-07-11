@@ -47,6 +47,8 @@ public class PlayerController : MonoBehaviour {
     public bool xPress;
     public bool yPress;
     public bool zPress;
+    public bool lPress;
+    public bool rPress;
 
     //press/hold detection variables
     public bool aHold = false;
@@ -63,6 +65,12 @@ public class PlayerController : MonoBehaviour {
 
     public bool zHold = false;
     public bool lastZ = false;
+
+    public bool lHold = false;
+    public bool lastL = false;
+
+    public bool rHold = false;
+    public bool lastR = false;
 
     //used to determine if the stick was just pressed down (for fastfalling)
     public bool onStickDown = false;
@@ -87,7 +95,7 @@ public class PlayerController : MonoBehaviour {
     protected float maxAirSpeed = 0.09F;
     protected float airAccel = 0.007F;
     protected float airDeccel = 0.0045F ;
-    protected float jumpMomentum = 0.3F;
+    protected float jumpMomentum = 0.35F;
     protected float fallSpeed = 0.0095F;
 
     protected float baseMaxFallSpeed = 0.2F;
@@ -140,6 +148,8 @@ public class PlayerController : MonoBehaviour {
     public Attack sideBAttackAerial = null;
     public int sideBUsed = 0;
 
+    public Attack airdodge = null;
+
     //Animations
     public Material standing;
     public Material hitstunned;
@@ -187,6 +197,8 @@ public class PlayerController : MonoBehaviour {
         //Checks Grounded state
         if (transform.position.y > groundLevel)
         {
+            //currently no support for moving platforms
+            //transform.parent = null;
             groundMomentum.x = 0;
             if (moveState == MoveStates.STILL || moveState == MoveStates.LEFTWALK || moveState == MoveStates.RIGHTWALK)
             {
@@ -200,6 +212,8 @@ public class PlayerController : MonoBehaviour {
             {
                 Land();
             }
+
+            //transform.parent = pgh.nextPlat.plat.transform;
         }
 
         if (isGrounded && moveState != MoveStates.SPECIALMOVE)
@@ -497,7 +511,7 @@ public class PlayerController : MonoBehaviour {
         //if falling too fast, slow down
         if (airMomentum.y < -maxFallSpeed)
         {
-            airMomentum.y = -maxFallSpeed;
+            airMomentum.y += fallSpeed * 1.01F;
         }
 
         if (yPress || xPress)
@@ -505,6 +519,10 @@ public class PlayerController : MonoBehaviour {
             Jump(true);
         }
 
+        if (lPress || rPress)
+        {
+            //pam.StartAttack(
+        }
         if (bPress)
         {
             pam.UseSpecialAttack(this);
@@ -572,7 +590,7 @@ public class PlayerController : MonoBehaviour {
             airMomentum.y = -maxFallSpeed;
         }
 
-        if (PreventClipping() || isGrounded)
+        if ((PreventClipping() || isGrounded) && airMomentum.y <= 0)
         {
             Land();
             EndAttack();
@@ -644,7 +662,7 @@ public class PlayerController : MonoBehaviour {
                 //transform.Translate(new Vector3(0, airMomentum.y));
             }
         }
-        if ((PreventClipping()) && currAttack.groundCancel && currAttack.frameData[currAttackFrame].cancelable)
+        if (PreventClipping() && currAttack.groundCancel && currAttack.frameData[currAttackFrame].cancelable && airMomentum.y <= 0)
         {
             EndAttack();
             frameCancel = true;
@@ -667,7 +685,7 @@ public class PlayerController : MonoBehaviour {
         if (knockbackMomentum.y < -maxFallSpeed)
         {
 
-            knockbackMomentum.y += (fallSpeed) * 1.05F;
+            knockbackMomentum.y -= (fallSpeed) * 0.005F;
         }
 
         transform.position += knockbackMomentum;
@@ -678,7 +696,7 @@ public class PlayerController : MonoBehaviour {
             if (knockbackMomentum.y < -maxFallSpeed * 1.6)
             {
                 knockbackMomentum.y = -knockbackMomentum.y * 0.6F;
-                hitStunDuration += 10;
+                hitStunDuration += 5;
             }
             else
             {
@@ -712,7 +730,7 @@ public class PlayerController : MonoBehaviour {
     //called when hitlag starts, signals end of hitlag
     public virtual IEnumerator Hitlag(int duration, float knockbackValue, int hitstun, float angle, PlayerController sender = null, bool attacker = false)
     {
-        if (frameCancel)
+        if (frameCancel && attacker)
         {
             Debug.Log("Frame Cancel? What a god");
             yield break;
@@ -737,8 +755,7 @@ public class PlayerController : MonoBehaviour {
         }
         else
         {
-            upBUsed = 0;
-            sideBUsed = 0;
+            RestoreSpecials();
             InterruptAttack();
         }
         moveState = MoveStates.HITLAG;
@@ -783,7 +800,7 @@ public class PlayerController : MonoBehaviour {
     //called when hitstun starts, signals end of hitstun
     public virtual IEnumerator Hitstun()
     {
-        if ((isGrounded || PreventClipping()) && Mathf.Abs(knockbackMomentum.y) < 0.15F)
+        if ((isGrounded || PreventClipping()) && Mathf.Abs(knockbackMomentum.y) < 0.12F)
         {
             knockbackMomentum.y = 0;
         }
@@ -810,6 +827,8 @@ public class PlayerController : MonoBehaviour {
             hitStunDuration = 0;
             inHitstun = false;
         }
+
+        knockbackMomentum = Vector3.zero;
 
     }
 
@@ -967,6 +986,7 @@ public class PlayerController : MonoBehaviour {
 
         currAttack = null;
         currAttackFrame = 0;
+        MakeInvincible(true);
     }
 
     //Used when an attack is cut short/canceled by something else.
@@ -982,8 +1002,10 @@ public class PlayerController : MonoBehaviour {
 
         currAttack = null;
         currAttackFrame = 0;
+        MakeInvincible(true);
     }
 
+    //called to toggle invincibility
     public void MakeInvincible(bool reverse = false)
     {
         if (reverse)
@@ -996,6 +1018,18 @@ public class PlayerController : MonoBehaviour {
         }
 
         hurtBox.enabled = !isInvincible;
+    }
+
+    public void RestoreSpecials()
+    {
+        if (upBAttack.restoreOnHit)
+        {
+            upBUsed = 0;
+        }
+        if (sideBAttack.restoreOnHit)
+        {
+            sideBUsed = 0;
+        }
     }
 
     //returns true if the player is outside the bounds of the stage. Note that if the player is above the top of the stage, they must also be in HITSTUN
@@ -1066,6 +1100,12 @@ public class PlayerController : MonoBehaviour {
                 zHold = InputManager.zHold;
                 lastZ = InputManager.lastZ;
 
+                lHold = InputManager.lHold;
+                lastL = InputManager.lastL;
+
+                rHold = InputManager.rHold;
+                lastR = InputManager.lastR;
+
                 break;
             case 2:
                 hori = InputManager.hori2;
@@ -1103,6 +1143,12 @@ public class PlayerController : MonoBehaviour {
 
                 zHold = InputManager.zHold2;
                 lastZ = InputManager.lastZ2;
+
+                lHold = InputManager.lHold2;
+                lastL = InputManager.lastL2;
+
+                rHold = InputManager.rHold2;
+                lastR = InputManager.lastR2;
 
                 break;
         }

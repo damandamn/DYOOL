@@ -12,6 +12,67 @@ public class GameData {
     public static float stageBottom;
     public static float stageWidth;
 
+    public static Attack CreateExampleAirdodge(List<GameObject> hb)
+    {
+
+        List<MoveFrame> fd = new List<MoveFrame>();
+
+        //Startup - 3 frames
+        for (int i = 0; i < 2; i++)
+        {
+            fd.Add(new MoveFrame()
+            {
+                startupFrame = true
+            });
+        }
+
+        fd.Add(new MoveFrame()
+        {
+            startupFrame = true,
+            playSound = true,
+            frameSound = AudioContainer.whiff2
+        });
+
+        for (int i = 0; i < 24; i++)
+        {
+            fd.Add(new MoveFrame()
+            {
+                iFrame = true
+            });
+        }
+
+        //Endlag - 8 frames (autocancel 10 frames)
+        for (int i = 0; i < 5; i++)
+        {
+            fd.Add(new MoveFrame()
+            {
+                endlagFrame = true
+            });
+        }
+
+        for (int i = 0; i < 3; i++)
+        {
+            fd.Add(new MoveFrame()
+            {
+                endlagFrame = true,
+                autoCancel = true
+            });
+        }
+
+        //FAF - 35
+        fd.Add(new MoveFrame()
+        {
+            lastFrame = true
+        });
+
+        Attack airdodge = new Attack(hb, fd);
+        airdodge.aerial = true;
+        airdodge.landingLag = 20;
+
+
+        return airdodge;
+    }
+
     //Example kit
     public static Attack CreateExampleJabAttack(List<GameObject> hb)
     {
@@ -208,8 +269,8 @@ public class GameData {
             true
         };
 
-        //Active - 2 frames
-        for (int i = 0; i< 2; i++) {
+        //Active - 3 frames
+        for (int i = 0; i< 3; i++) {
             fd.Add(new MoveFrame()
             {
                 hitboxActive = true,
@@ -225,7 +286,7 @@ public class GameData {
             });
         }
 
-        //FAF - 29
+        //FAF - 30
         fd.Add(new MoveFrame()
         {
             lastFrame = true
@@ -468,8 +529,8 @@ public class GameData {
             });
         }
 
-        //Endlag - 25 frames (autocancel 1 frames)
-        for (int i = 0; i < 20; i++)
+        //Endlag - 15 frames (autocancel 1 frames)
+        for (int i = 0; i < 15; i++)
         {
             fd.Add(new MoveFrame()
             {
@@ -615,7 +676,7 @@ public class GameData {
 
         List<MoveFrame> fd = new List<MoveFrame>();
 
-        //Startup - 40 frames (10 invincible, 30 not)
+        //Startup - 40 frames (23 invincible, 17 not)
         fd.Add(new MoveFrame()
         {
             startupFrame = true,
@@ -626,7 +687,7 @@ public class GameData {
             iFrame = true
         });
 
-        for (int i = 0; i < 9; i++)
+        for (int i = 0; i < 22; i++)
         {
             fd.Add(new MoveFrame()
             {
@@ -637,7 +698,7 @@ public class GameData {
             });
         }
 
-        for (int i = 0; i < 30; i++)
+        for (int i = 0; i < 17; i++)
         {
             fd.Add(new MoveFrame()
             {
@@ -806,7 +867,8 @@ public class GameData {
         {
             projectile = hb[0],
             destroyOnHit = true,
-            reverseFrames = 6
+            reverseFrames = 6,
+            restoreOnHit = true
         };
 
         return exampleProjectileAttack;
@@ -916,7 +978,8 @@ public class GameData {
             cancelAirMomentum = true,
             reverseFrames = 10,
             groundCancel = true,
-            landingLag = 4
+            landingLag = 4,
+            restoreOnHit = true
         };
 
         return UpBAttack;
@@ -1012,6 +1075,61 @@ public class GameData {
 
         //Endlag - 18 frames
         for (int i = 0; i < 15; i++)
+        {
+            fd.Add(new MoveFrame()
+            {
+                endlagFrame = true
+            });
+        }
+
+        //FAF - 25
+        fd.Add(new MoveFrame()
+        {
+            lastFrame = true
+        });
+
+        return new Attack(hb, fd);
+    }
+
+    public static Attack CreateMorganisDTiltAttack(List<GameObject> hb)
+    {
+
+        List<MoveFrame> fd = new List<MoveFrame>();
+
+        //Startup - 5 frames
+        for (int i = 0; i < 5; i++)
+        {
+            fd.Add(new MoveFrame()
+            {
+                startupFrame = true
+            });
+        }
+
+        fd.Add(new MoveFrame()
+        {
+            startupFrame = true,
+            playSound = true,
+            frameSound = AudioContainer.swordWhiff1
+        });
+
+
+        List<bool> activeHitboxes = new List<bool>()
+        {
+            true,
+            true
+        };
+
+        //Active - 3 frames
+        for (int i = 0; i < 3; i++)
+        {
+            fd.Add(new MoveFrame()
+            {
+                hitboxActive = true,
+                allHitboxesActive = activeHitboxes
+            });
+        }
+        //Endlag - 17 frames
+        for (int i = 0; i < 17; i++)
         {
             fd.Add(new MoveFrame()
             {
@@ -1307,6 +1425,101 @@ public class GameData {
 
         //Endlag - 16 frames (autocancel 10 frames)
         for (int i = 0; i < 6; i++)
+        {
+            fd.Add(new MoveFrame()
+            {
+                endlagFrame = true
+            });
+        }
+
+        for (int i = 0; i < 10; i++)
+        {
+            fd.Add(new MoveFrame()
+            {
+                endlagFrame = true,
+                autoCancel = true
+            });
+        }
+
+        //FAF - 22
+        fd.Add(new MoveFrame()
+        {
+            lastFrame = true
+        });
+
+        Attack uAirAttack = new Attack(hb, fd);
+        uAirAttack.aerial = true;
+        uAirAttack.landingLag = 12;
+
+
+        return uAirAttack;
+    }
+
+    public static Attack CreateMorganisDAirAttack(List<GameObject> hb)
+    {
+
+        List<MoveFrame> fd = new List<MoveFrame>();
+
+        //Startup - 3 frames
+        for (int i = 0; i < 2; i++)
+        {
+            fd.Add(new MoveFrame()
+            {
+                startupFrame = true
+            });
+        }
+
+        fd.Add(new MoveFrame()
+        {
+            startupFrame = true,
+            playSound = true,
+            frameSound = AudioContainer.whiff1
+        });
+
+        List<bool> activeHitboxes = new List<bool>()
+        {
+            true,
+            true
+        };
+
+        //List of hitbox position changes by frame
+        //frame 2
+        List<Vector3> frame2Anim = new List<Vector3>()
+        {
+            new Vector3(0.5F, -0.5F),
+            new Vector3(1F, -1F)
+        };
+        //frame 3
+        List<Vector3> frame3Anim = new List<Vector3>()
+        {
+            new Vector3(0.5F, 0.5F),
+            new Vector3(1F, 1F)
+        };
+
+        fd.Add(new MoveFrame()
+        {
+            hitboxActive = true,
+            allHitboxesActive = activeHitboxes
+        });
+
+        fd.Add(new MoveFrame()
+        {
+            hitboxActive = true,
+            allHitboxesActive = activeHitboxes,
+            hitboxAnimated = true,
+            allHitboxesAnimated = frame2Anim
+        });
+
+        fd.Add(new MoveFrame()
+        {
+            hitboxActive = true,
+            allHitboxesActive = activeHitboxes,
+            hitboxAnimated = true,
+            allHitboxesAnimated = frame3Anim
+        });
+
+        //Endlag - 26 frames (autocancel 10 frames)
+        for (int i = 0; i < 16; i++)
         {
             fd.Add(new MoveFrame()
             {
@@ -1644,7 +1857,8 @@ public class GameData {
         Attack UpBAttack = new Attack(true, hb, fd)
         {
             cancelAirMomentum = true,
-            reverseFrames = 4
+            reverseFrames = 4,
+            restoreOnHit  = true
         };
 
         return UpBAttack;
@@ -1753,7 +1967,8 @@ public class GameData {
         Attack UpBAttack = new Attack(true, hb, fd)
         {
             cancelAirMomentum = true,
-            reverseFrames = 4
+            reverseFrames = 4,
+            restoreOnHit = true
         };
 
         return UpBAttack;

@@ -65,9 +65,12 @@ public class HitBox : MonoBehaviour {
 
     public void PlaySound()
     {
+        try {  
         AS.pitch = Random.Range(0.9F, 1.1F);
         AS.Play();
         Destroy(AS.gameObject, hitSound.length);
+        }
+        catch { }
     }
 
 

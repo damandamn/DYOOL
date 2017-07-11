@@ -39,10 +39,12 @@ public class GameLoader : MonoBehaviour {
     //Morganis Hitboxes
     public List<GameObject> morganisJabHitboxes;
     public List<GameObject> morganisFTiltHitboxes;
+    public List<GameObject> morganisDTiltHitboxes;
     public List<GameObject> morganisNAirHitboxes;
     public List<GameObject> morganisFAirHitboxes;
     public List<GameObject> morganisUAirHitboxes;
     public List<GameObject> morganisBAirHitboxes;
+    public List<GameObject> morganisDAirHitboxes;
 
     public List<GameObject> morganisProjectile;
     public List<GameObject> morganisUpBHitboxes;
@@ -58,7 +60,7 @@ public class GameLoader : MonoBehaviour {
 
         player1 = SpawnExamplePlayer();
         player1.playerNum = 1;
-        player2 = SpawnMorganis(new Vector3(5, -2.25F));
+        player2 = SpawnExamplePlayer(new Vector3(5, -2.25F));
         player2.playerNum = 2;
 
         PlayerAttackManager.nullAttackLists.Add(player1.nullify);
@@ -73,7 +75,7 @@ public class GameLoader : MonoBehaviour {
         damageCounter1.GetComponent<DamageCounter>().damageSource = player1;
         damageCounter2.GetComponent<DamageCounter>().damageSource = player2;
 
-        stagebuilder.ConstructFlat();
+        stagebuilder.ConstructTower();
     }
 
     void LoadResources()
@@ -129,6 +131,8 @@ public class GameLoader : MonoBehaviour {
         player.sideBAttack = GameData.CreateGroundedExampleProjectileAttack(exampleProjectile);
         player.sideBAttackAerial = GameData.CreateAerialExampleProjectileAttack(exampleProjectile);
 
+        player.airdodge = GameData.CreateExampleAirdodge(jabHitboxes);
+
         player.standing = marshmallowStand;
         player.hitstunned = marshmallowHitstun;
 
@@ -152,10 +156,10 @@ public class GameLoader : MonoBehaviour {
         player.jabAttack = GameData.CreateMorganisJabAttack(morganisJabHitboxes);
         player.fTiltAttack = GameData.CreateMorganisFTiltAttack(morganisFTiltHitboxes);
         player.uTiltAttack = GameData.CreateExampleUTiltAttack(uTiltHitboxes);
-        player.dTiltAttack = GameData.CreateExampleDTiltAttack(dTiltHitboxes);
+        player.dTiltAttack = GameData.CreateMorganisDTiltAttack(morganisDTiltHitboxes);
 
         player.nAirAttack = GameData.CreateMorganisNAirAttack(morganisNAirHitboxes);
-        player.dAirAttack = GameData.CreateExampleDAirAttack(dAirHitboxes);
+        player.dAirAttack = GameData.CreateMorganisDAirAttack(morganisDAirHitboxes);
         player.uAirAttack = GameData.CreateMorganisUAirAttack(morganisUAirHitboxes);
         player.fAirAttack = GameData.CreateMorganisFAirAttack(morganisFAirHitboxes);
         player.bAirAttack = GameData.CreateMorganisBAirAttack(morganisBAirHitboxes);
@@ -164,6 +168,8 @@ public class GameLoader : MonoBehaviour {
         player.upBAttackAerial = GameData.CreateAerialMorganisUpBAttack(morganisUpBHitboxes);
         player.neutralBAttack = GameData.CreateMorganisProjectileAttack(morganisProjectile);
         player.sideBAttack = GameData.CreateMorganisSideBAttack(morganisSideBHitboxes);
+
+        player.airdodge = GameData.CreateExampleAirdodge(jabHitboxes);
 
         player.standing = marshmallowStand;
         player.hitstunned = marshmallowHitstun;
