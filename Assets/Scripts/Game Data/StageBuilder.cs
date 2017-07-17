@@ -6,9 +6,9 @@ public class StageBuilder : MonoBehaviour {
 
     public Material platMat;
 
-    static float flatStageHeight = 25;
-    static float flatStageBottom = -18;
-    static float flatStageWidth = 28;
+    static float flatStageHeight = 26;
+    static float flatStageBottom = -19;
+    static float flatStageWidth = 31;
 
     public void ConstructFlat()
     {
@@ -19,8 +19,21 @@ public class StageBuilder : MonoBehaviour {
         plat1.transform.localScale = new Vector3(30, 2, 1);
         plat1.GetComponent<Renderer>().material = platMat;
 
+        //TODO: add formula based on player size for ledgegrabposition
 
-        StageData.activePlatforms.Add(new Platform(-2.25F, plat1));
+        LedgeNode ledge1 = Instantiate(GameData.ledgePrefab).GetComponent<LedgeNode>();
+        ledge1.ledgePosition = new Vector3(15.25F, -5F);
+        ledge1.ledgeGrabPosition = ledge1.ledgePosition + (Vector3.right * 0.5F);
+        ledge1.ledgeGrabLeft = false;
+
+        LedgeNode ledge2 = Instantiate(GameData.ledgePrefab).GetComponent<LedgeNode>();
+        ledge2.ledgePosition = new Vector3(-15.25F, -5F);
+        ledge2.ledgeGrabPosition = ledge2.ledgePosition + (Vector3.left * 0.5F);
+        ledge2.ledgeGrabLeft = true;
+
+
+
+        StageData.activePlatforms.Add(new Platform(0, plat1));
 
         GameData.stageHeight = flatStageHeight;
         GameData.stageBottom = flatStageBottom;

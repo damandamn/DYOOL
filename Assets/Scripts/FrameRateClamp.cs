@@ -6,7 +6,8 @@ public class FrameRateClamp : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-        Application.targetFrameRate = 61;
+        QualitySettings.vSyncCount = 0;
+        Application.targetFrameRate = 60;
 	}
 
     float deltaTime = 0.0f;

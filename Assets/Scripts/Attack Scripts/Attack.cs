@@ -9,6 +9,7 @@ public class Attack {
     public bool aerial = false;
     public int landingLag = 0;
     public bool destroyOnHit = false;
+    public bool pierceShield = false;
 
     //variables for special moves
     public bool special = false;
@@ -17,7 +18,7 @@ public class Attack {
     public bool reversable = true;
     public int reverseFrames = 0;
     public int aerialUses = 1;
-    public bool restoreOnHit = false;
+    public bool restoreOnHit = true;
     public bool endlagOnHit = false;
     public bool groundCancel = false;
     public bool specialFall = false;

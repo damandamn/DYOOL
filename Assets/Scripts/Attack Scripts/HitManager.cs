@@ -5,11 +5,17 @@ using UnityEngine;
 public class HitManager : MonoBehaviour {
 
     public static Dictionary<PlayerController, IEnumerator> playersInHitstun = new Dictionary<PlayerController, IEnumerator>();
-    static Dictionary<PlayerController, IEnumerator> playersInHitlag = new Dictionary<PlayerController, IEnumerator>();
+    public static Dictionary<PlayerController, IEnumerator> playersInHitlag = new Dictionary<PlayerController, IEnumerator>();
 
     public void CalculateHit(HitBox attack, PlayerController user, PlayerController enemy)
     {
-        enemy.currDamage += attack.damage;
+        if (enemy.moveState == PlayerController.MoveStates.SHIELD)
+        {
+            enemy.currDamage += (attack.damage + attack.shieldDamage) * GameData.shieldDamageMultiplier;
+        } else
+        {
+            enemy.currDamage += attack.damage;
+        }
         float knockbackValue = 0;
         float growth = (enemy.currDamage / 100);
         float weightMultiplier = 2 - (enemy.weight / 100);
@@ -30,14 +36,15 @@ public class HitManager : MonoBehaviour {
             enemy.isFacingLeft = true;
         }
 
-        float modifiedKBG = attack.growthKnockback / 2;
+        float modifiedKBG = attack.growthKnockback / 1.5F;
+        float modifiedBKB = attack.baseKnockback;
         //Formula (from left to right) = (mKBG * enemydamage/100) * (2 - weight/100) * (1 + attackdamage/100) + BKB
         //30 BKB, 100 KBG, 10 damage, 100 percent and 100 weight on enemy = 140
         //30 kbk, 10 kbg, 3 damage, 10 percent and 100 weight on enemy = 40
         knockbackValue += (modifiedKBG * growth);
         knockbackValue *= weightMultiplier;
         knockbackValue *= 1 + ((3 * attack.damage) / 100);
-        knockbackValue += attack.baseKnockback;
+        knockbackValue += modifiedBKB;
 
         //hitstun duration formula. Improve on this! 
         int hitstunDuration;
@@ -54,11 +61,22 @@ public class HitManager : MonoBehaviour {
         try
         {
             StopCoroutine(playersInHitlag[enemy]);
-            playersInHitlag[enemy] = null;
-        } catch
+            //playersInHitlag[enemy] = null;
+        }
+        catch
         { }
-   
-        playersInHitlag[enemy] = enemy.Hitlag(attack.hitlag + (int)attack.damage, knockbackValue, hitstunDuration, angle, user);
+
+        if (enemy.moveState == PlayerController.MoveStates.SHIELD && !attack.attack.pierceShield)
+        {
+            int shieldstun = ShieldStunFormula(attack.hitlag + (int)attack.damage + (int)attack.shieldDamage);
+            playersInHitlag[enemy] = enemy.Hitlag(shieldstun, knockbackValue, 0, angle, null, true, attack.damage + attack.shieldDamage);
+            enemy.PlaySound(AudioContainer.block1);
+        }
+        else
+        {
+            playersInHitlag[enemy] = enemy.Hitlag(attack.hitlag + (int)attack.damage, knockbackValue, hitstunDuration, angle, user);
+        }
+
         StartCoroutine(playersInHitlag[enemy]);
 
         //no hitlag for attacker if they used a projectile
@@ -143,6 +161,12 @@ public class HitManager : MonoBehaviour {
         }
 
         return angle;
+    }
+
+    int ShieldStunFormula (int hitstun)
+    {
+
+        return (int)(hitstun * 1.2);
     }
 
 }

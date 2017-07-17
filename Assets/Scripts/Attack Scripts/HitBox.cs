@@ -22,6 +22,7 @@ public class HitBox : MonoBehaviour {
     float height;
 
     public float damage;
+    public float shieldDamage = 0;
     public float baseKnockback;
     public float growthKnockback;
     public float angle;
@@ -65,14 +66,27 @@ public class HitBox : MonoBehaviour {
 
     public void PlaySound()
     {
-        AS.pitch = Random.Range(0.9F, 1.1F);
-        AS.Play();
-        Destroy(AS.gameObject, hitSound.length);
+        try
+        {
+            AS.pitch = Random.Range(0.9F, 1.1F);
+            AS.Play();
+            Destroy(AS.gameObject, hitSound.length);
+        } catch
+        {
+            Debug.Log("Interesting Audiosource bug");
+        }
     }
 
 
     void OnTriggerStay(Collider other)
     {
+        if (other.gameObject.tag == "Hitbox")
+        {
+            if (attack.destroyOnHit)
+            {
+                Destroy(gameObject);
+            }
+        }
         //is this collider another player?
         if (other.gameObject != user.gameObject && other.gameObject.tag == "Player")
         {
@@ -85,14 +99,6 @@ public class HitBox : MonoBehaviour {
             {
                 hit = other;
                 user.pam.PrioritizeHit(this);
-            }
-        }
-        else
-        if (other.gameObject.tag == "Hitbox")
-        {
-            if (attack.destroyOnHit)
-            {
-                Destroy(gameObject);
             }
         }
     }

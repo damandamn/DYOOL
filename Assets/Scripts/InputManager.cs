@@ -16,6 +16,8 @@ public class InputManager : MonoBehaviour {
 
     public static bool onStickDown;
     public static bool onStick;
+    public static bool onStickBuff;
+        public static int stickFrames;
     public static bool onStickHold;
     public static float lastStickY;
     public static float lastStickX;
@@ -30,6 +32,8 @@ public class InputManager : MonoBehaviour {
     public static bool xPress;
     public static bool yPress;
     public static bool zPress;
+    public static bool lPress;
+    public static bool rPress;
 
     //press/hold detection
     public static bool aHold = false;
@@ -47,6 +51,13 @@ public class InputManager : MonoBehaviour {
     public static bool zHold = false;
     public static bool lastZ = false;
 
+    public static bool lHold = false;
+    public static bool lastL = false;
+
+    public static bool rHold = false;
+    public static bool lastR = false;
+
+
     /* ------------------------------------------------------------------------------------------------------------------------*/
 
     //input variables for joystick 1
@@ -58,6 +69,8 @@ public class InputManager : MonoBehaviour {
 
     public static bool onStickDown2;
     public static bool onStick2;
+    public static bool onStickBuff2;
+        public static int stickFrames2;
     public static bool onStickHold2;
     public static float lastStickY2;
     public static float lastStickX2;
@@ -72,6 +85,8 @@ public class InputManager : MonoBehaviour {
     public static bool xPress2;
     public static bool yPress2;
     public static bool zPress2;
+    public static bool lPress2;
+    public static bool rPress2;
 
     //press/hold detection
     public static bool aHold2 = false;
@@ -88,6 +103,12 @@ public class InputManager : MonoBehaviour {
 
     public static bool zHold2 = false;
     public static bool lastZ2 = false;
+
+    public static bool lHold2 = false;
+    public static bool lastL2 = false;
+
+    public static bool rHold2 = false;
+    public static bool lastR2 = false;
 
 
     void Update()
@@ -110,7 +131,8 @@ public class InputManager : MonoBehaviour {
         }
     }
 
-    void CheckInputs1() {
+    void CheckInputs1()
+    {
 
         //axis values
         hori = Input.GetAxis("Horizontal");
@@ -183,6 +205,67 @@ public class InputManager : MonoBehaviour {
             zHold = false;
             zPress = false;
             lastZ = false;
+        }
+
+        if (Input.GetAxis("LButton") != 0)
+        {
+            lHold = true;
+            lPress = !lastL;
+            lastL = lHold;
+        }
+        else
+        {
+            lHold = false;
+            lPress = false;
+            lastL = false;
+        }
+        if (Input.GetAxis("RButton") != 0)
+        {
+            rHold = true;
+            rPress = !lastR;
+            lastR = rHold;
+        }
+        else
+        {
+            rHold = false;
+            rPress = false;
+            lastR = false;
+        }
+
+        //double checks holds
+        if (Input.GetAxis("AButton") != 0)
+        {
+            aHold = true;
+        }
+
+        if (Input.GetAxis("BButton") != 0)
+        {
+            bHold = true;
+        }
+
+        if (Input.GetAxis("XButton") != 0)
+        {
+            xHold = true;
+        }
+
+        if (Input.GetAxis("YButton") != 0)
+        {
+            yHold = true;
+        }
+
+        if (Input.GetAxis("ZButton") != 0)
+        {
+            zHold = true;
+        }
+
+        if (Input.GetAxis("LButton") != 0)
+        {
+            lHold = true;
+        }
+
+        if (Input.GetAxis("RButton") != 0)
+        {
+            rHold = true;
         }
     }
 
@@ -260,6 +343,67 @@ public class InputManager : MonoBehaviour {
             zPress2 = false;
             lastZ2 = false;
         }
+
+        if (Input.GetAxis("LButton2") != 0)
+        {
+            lHold2 = true;
+            lPress2 = !lastL2;
+            lastL2 = lHold2;
+        }
+        else
+        {
+            lHold2 = false;
+            lPress2 = false;
+            lastL2 = false;
+        }
+        if (Input.GetAxis("RButton2") != 0)
+        {
+            rHold2 = true;
+            rPress2 = !lastR2;
+            lastR2 = rHold2;
+        }
+        else
+        {
+            rHold2 = false;
+            rPress2 = false;
+            lastR2 = false;
+        }
+
+        //double checks holds
+        if (Input.GetAxis("AButton2") != 0)
+        {
+            aHold2 = true;
+        }
+
+        if (Input.GetAxis("BButton2") != 0)
+        {
+            bHold2 = true;
+        }
+
+        if (Input.GetAxis("XButton2") != 0)
+        {
+            xHold2 = true;
+        }
+
+        if (Input.GetAxis("YButton2") != 0)
+        {
+            yHold2 = true;
+        }
+
+        if (Input.GetAxis("ZButton2") != 0)
+        {
+            zHold2 = true;
+        }
+
+        if (Input.GetAxis("LButton2") != 0)
+        {
+            lHold2 = true;
+        }
+
+        if (Input.GetAxis("RButton2") != 0)
+        {
+            rHold2 = true;
+        }
     }
 
     //TODO: Check if this works, and then copy it to CheckSticksDown2();
@@ -290,6 +434,19 @@ public class InputManager : MonoBehaviour {
         {
             onStickHold = false;
             onStick = false;
+        }
+
+        if (onStick)
+        {
+            onStickBuff = true;
+        } else
+        {
+            stickFrames++;
+            if (stickFrames > 4 )
+            {
+                onStickBuff = false;
+                stickFrames = 0;
+            }
         }
 
         lastStickY = vert;
@@ -347,6 +504,20 @@ public class InputManager : MonoBehaviour {
         {
             onStickHold2 = false;
             onStick2 = false;
+        }
+
+        if (onStick2)
+        {
+            onStickBuff2 = true;
+        }
+        else
+        {
+            stickFrames2++;
+            if (stickFrames2 > 4)
+            {
+                onStickBuff2 = false;
+                stickFrames2 = 0;
+            }
         }
 
         lastStickY2 = vert2;

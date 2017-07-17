@@ -40,6 +40,7 @@ public class MorganisAttackManager : PlayerAttackManager {
         //stick is left or right
         if (user.hori >= user.horiThreshold )
         {
+
             if (user.sideBUsed < user.sideBAttack.aerialUses)
             {
                 user.sideBUsed++;

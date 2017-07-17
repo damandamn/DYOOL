@@ -42,7 +42,7 @@ public class HitboxRender : MonoBehaviour {
 
         if (sourceHitbox.isActive)
         {
-            material = GameLoader.SetAlpha(material, 100);
+            material = GameLoader.SetAlpha(material, 0.8F);
         } else
         {
             material = GameLoader.SetAlpha(material, 0);

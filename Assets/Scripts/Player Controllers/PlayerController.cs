@@ -10,23 +10,36 @@ public class PlayerController : MonoBehaviour {
         STILL,
         LEFTWALK,
         RIGHTWALK,
+        LEFTRUN,
+        RIGHTRUN,
         TURN,
+        SKID,
         JUMPSQUAT,
         ATTACK,
         AERIAL,
         SPECIALMOVE,
+        SHIELD,
+        SHIELDDROP,
         LANDINGLAG,
+        LEDGEGRAB,
+        LEDGEHOLD,
         HITLAG,
         HITSTUN,
         AIRBORNE,
         SPECIALFALL
     }
 
+    public LedgeNode currLedge;
+    public bool canGrabLedge;
+    public int framesSinceLedgeGrab = 0;
+
     public PlayerGroundHandler pgh;
     public PlayerAttackManager pam;
     public Renderer render;
     public Collider hurtBox;
     public AudioSource soundPlayer;
+
+    public Vector3 basePlayerScale = new Vector3(1.5F, 3.5F, 0);
 
     public int playerNum = 1;
     public float currDamage = 0;
@@ -36,7 +49,7 @@ public class PlayerController : MonoBehaviour {
     public float hori;
     public float vert;
 
-    public float horiThreshold = 0.6F;
+    public float horiThreshold = 0.8F;
     public float vertThreshold = 0.8F;
 
     public float cHori;
@@ -47,6 +60,8 @@ public class PlayerController : MonoBehaviour {
     public bool xPress;
     public bool yPress;
     public bool zPress;
+    public bool lPress;
+    public bool rPress;
 
     //press/hold detection variables
     public bool aHold = false;
@@ -64,9 +79,16 @@ public class PlayerController : MonoBehaviour {
     public bool zHold = false;
     public bool lastZ = false;
 
+    public bool lHold = false;
+    public bool lastL = false;
+
+    public bool rHold = false;
+    public bool lastR = false;
+
     //used to determine if the stick was just pressed down (for fastfalling)
     public bool onStickDown = false;
     public bool onStick = false;
+    public bool onStickBuff = false;
     public float lastStickY = 0;
     public float lastStickX = 0;
 
@@ -79,15 +101,18 @@ public class PlayerController : MonoBehaviour {
     protected float groundLevel = -2.25F;
 
     //Character Attributes! These all change from character to character
+    protected float baseWalkSpeed = 0.1F;
     protected float walkSpeed = 0.1F;
+    protected float runSpeed = 0.17F;
+        int runFrames = 0;
     protected float traction = 0.01F;
     protected float walkAccel = 0.01F;
-    protected float dashAccel = 0.01F;
+    protected float runAccel = 0.04F;
 
     protected float maxAirSpeed = 0.09F;
     protected float airAccel = 0.007F;
     protected float airDeccel = 0.0045F ;
-    protected float jumpMomentum = 0.3F;
+    protected float jumpMomentum = 0.35F;
     protected float fallSpeed = 0.0095F;
 
     protected float baseMaxFallSpeed = 0.2F;
@@ -99,7 +124,13 @@ public class PlayerController : MonoBehaviour {
     protected int jumpFrames = 4;
     protected int turnFrames = 2;
 
-    int lagCount = 0;
+    public int lagCount = 0;
+
+    int returnID;
+
+    public bool topColl = false;
+    public bool leftColl = false;
+    public bool rightColl = false;
 
     public Vector3 airMomentum = new Vector3(0, 0);
     public Vector3 groundMomentum = new Vector3(0, 0);
@@ -119,6 +150,8 @@ public class PlayerController : MonoBehaviour {
 
     public Attack currAttack = null;
     public int currAttackFrame = 0;
+
+    public Attack bufferedOption;
 
     //List of all of a characters attacks
     public Attack jabAttack = null;
@@ -140,9 +173,15 @@ public class PlayerController : MonoBehaviour {
     public Attack sideBAttackAerial = null;
     public int sideBUsed = 0;
 
+    public Attack airdodge = null;
+    public Attack dash = null;
+    public Attack backDash = null;
+
     //Animations
     public Material standing;
     public Material hitstunned;
+    public Material shielding;
+    public Material shieldStunned;
 
     void Start()
     {
@@ -155,6 +194,10 @@ public class PlayerController : MonoBehaviour {
 
     //Update is called once per frame
     void Update() {
+        if (playerNum == 1)
+        {
+            //For debugging
+        }
 
         if (CheckBlastZones())
         {
@@ -165,7 +208,9 @@ public class PlayerController : MonoBehaviour {
 
         //checks at the beginning and end of Update()
         pgh.UpdatePlatform();
-        groundLevel = pgh.platHeight;
+
+        //= groundLevel = platHeight    +    ( height      / 2) - 4
+        groundLevel = pgh.platHeight + ((basePlayerScale.y / 2) - 4F);
 
         if (frameCancel == true)
         {
@@ -175,18 +220,38 @@ public class PlayerController : MonoBehaviour {
         GetInputs();
         CheckFastFall();
 
+        if (moveState != MoveStates.LEDGEHOLD && moveState != MoveStates.LEDGEGRAB)
+        {
+            framesSinceLedgeGrab++;
+            currLedge = null;
+        } else
+        {
+            framesSinceLedgeGrab = 0;
+        }
+        if (moveState == MoveStates.LEFTRUN || moveState == MoveStates.RIGHTRUN || moveState == MoveStates.SKID)
+        {
+            runFrames++;
+        }
+        else
+        {
+            runFrames = 0;
+        }
+
+
         //flips character model when facing left
         if (isFacingLeft)
         {
-            transform.localScale = new Vector3(-1.5F, 3.5F, 1);
+            transform.localScale = new Vector3(-basePlayerScale.x, basePlayerScale.y, 1);
         } else
         {
-            transform.localScale = new Vector3(1.5F, 3.5F, 1);
+            transform.localScale = new Vector3(basePlayerScale.x, basePlayerScale.y, 1);
         }
 
         //Checks Grounded state
         if (transform.position.y > groundLevel)
         {
+            //currently no support for moving platforms
+            //transform.parent = null;
             groundMomentum.x = 0;
             if (moveState == MoveStates.STILL || moveState == MoveStates.LEFTWALK || moveState == MoveStates.RIGHTWALK)
             {
@@ -200,6 +265,8 @@ public class PlayerController : MonoBehaviour {
             {
                 Land();
             }
+            canGrabLedge = false;
+            //transform.parent = pgh.nextPlat.plat.transform;
         }
 
         if (isGrounded && moveState != MoveStates.SPECIALMOVE)
@@ -244,13 +311,29 @@ public class PlayerController : MonoBehaviour {
             HitStunControl();
         }
 
-        //MOVESTATE = JUMPSQUAT, LANDINGLAG, OR TURN
-        else if (moveState == MoveStates.JUMPSQUAT || moveState == MoveStates.TURN || moveState == MoveStates.LANDINGLAG)
+        //MOVESTATE = JUMPSQUAT, LANDINGLAG, SHIELDDROP, SHIELDSTUN, LEDGEGRAB, SKID, OR TURN
+        else if (moveState == MoveStates.JUMPSQUAT || moveState == MoveStates.TURN || moveState == MoveStates.LANDINGLAG 
+                || moveState == MoveStates.SHIELDDROP || moveState == MoveStates.LEDGEGRAB || moveState == MoveStates.SKID)
         {
             ApplyTraction();
             if (lagCount > 1)
             {
                 lagCount--;
+                bufferedOption = BufferMove();
+
+                if (moveState == MoveStates.SKID)
+                {
+                    if (yPress || xPress)
+                    {
+                        StartJumpsquat();
+                    } else
+
+                    if (lagCount >= 11)
+                    {
+                        RunControl();
+                    }
+                }
+
 
             } else
             {
@@ -258,11 +341,36 @@ public class PlayerController : MonoBehaviour {
                 {
                     Jump();
 
-                } else {
+                }
+                else
+                if (moveState == MoveStates.LEDGEGRAB)
+                {
+                    moveState = MoveStates.LEDGEHOLD;
+
+                }
+                else
+                {
                     moveState = MoveStates.STILL;
 
                 }
+
+                if (bufferedOption != null)
+                {
+                    pam.UseBufferedOption(this, bufferedOption);
+                }
             }
+        }
+
+        //MOVESTATE = SHIELD
+        else if (moveState == MoveStates.SHIELD)
+        {
+            ShieldControl();
+        }
+
+        //MOVESTATE = LEDGEHOLD
+        else if (moveState == MoveStates.LEDGEHOLD)
+        {
+            LedgeControl();
         }
 
         //MOVESTATE = ATTACK
@@ -293,48 +401,86 @@ public class PlayerController : MonoBehaviour {
         else if (moveState == MoveStates.AERIAL) {
             AerialAttackControl();
         }
+
+        //MOVESTATE == SPECIALMOVE
         else if (moveState == MoveStates.SPECIALMOVE)
         {
             SpecialMoveControl();
         }
-        //MOVESTATE = AIRBORNE, STILL, LEFTWALK, RIGHTWALK
+
+        //MOVESTATE = AIRBORNE, STILL, LEFTWALK, RIGHTWALK, LEFTRUN, RIGHTRUN
         else
-        { 
+        {
             //if the player is grounded, utilize grounded controls
             if (isGrounded)
             {
-                moveState = MoveStates.STILL;
-                GroundControl();
-
-                //Change ground momentum per frame
-                if (moveState == MoveStates.RIGHTWALK)
+                if (moveState == MoveStates.LEFTRUN || moveState == MoveStates.RIGHTRUN)
                 {
-                    if (groundMomentum.x > -walkSpeed)
-                    {
-                        groundMomentum.x -= walkAccel;
-                    }
+                    RunControl();
 
-                    if (groundMomentum.x < - walkSpeed)
+                    if (moveState == MoveStates.RIGHTRUN)
                     {
-                        groundMomentum.x += walkAccel;
+                        if (groundMomentum.x > -runSpeed)
+                        {
+                            groundMomentum.x -= runAccel;
+                        }
+
+                        if (groundMomentum.x < -runSpeed)
+                        {
+                            groundMomentum.x += runAccel;
+                        }
+
+                    }
+                    else if (moveState == MoveStates.LEFTRUN)
+                    {
+                        if (groundMomentum.x < runSpeed)
+                        {
+                            groundMomentum.x += runAccel;
+                        }
+
+                        if (groundMomentum.x > runSpeed)
+                        {
+                            groundMomentum.x -= runAccel;
+                        }
                     }
 
                 }
-                else if (moveState == MoveStates.LEFTWALK)
+                else
                 {
-                    if (groundMomentum.x < walkSpeed)
-                    {
-                        groundMomentum.x += walkAccel;
-                    }
 
-                    if (groundMomentum.x > walkSpeed)
+                    moveState = MoveStates.STILL;
+                    GroundControl();
+                    walkSpeed = baseWalkSpeed * (Mathf.Abs(hori) / 1);
+                    //Change ground momentum per frame
+                    if (moveState == MoveStates.RIGHTWALK)
                     {
-                        groundMomentum.x -= walkAccel;
+                        if (groundMomentum.x > -walkSpeed)
+                        {
+                            groundMomentum.x -= walkAccel;
+                        }
+
+                        if (groundMomentum.x < -walkSpeed)
+                        {
+                            groundMomentum.x += walkAccel;
+                        }
+
                     }
-                }
-                else if (moveState == MoveStates.STILL)
-                {
-                    ApplyTraction();
+                    else if (moveState == MoveStates.LEFTWALK)
+                    {
+                        if (groundMomentum.x < walkSpeed)
+                        {
+                            groundMomentum.x += walkAccel;
+                        }
+
+                        if (groundMomentum.x > walkSpeed)
+                        {
+                            groundMomentum.x -= walkAccel;
+                        }
+                    }
+                    else if (moveState == MoveStates.STILL)
+                    {
+                        ApplyTraction();
+                    }
                 }
             } else
             {
@@ -343,7 +489,10 @@ public class PlayerController : MonoBehaviour {
 
         }
 
-        if (moveState != MoveStates.HITLAG && moveState != MoveStates.HITSTUN)
+        //MOVESTATE = STILL, LEFTWALK, RIGHTWALK, TURN, JUMPSQUAT, ATTACK, AERIAL, SPECIALMOVE, SHIELD, SHIELDDROP, LANDINGLAG, AIRBORNE, SPECIALFALL
+        //This causes the player to move according to their ground/air momentum
+        if (moveState != MoveStates.HITLAG && moveState != MoveStates.HITSTUN && moveState != MoveStates.LEDGEGRAB 
+            && moveState != MoveStates.LEDGEHOLD)
         {
             if (isGrounded)
             {
@@ -358,10 +507,12 @@ public class PlayerController : MonoBehaviour {
                     {
                         transform.Translate(new Vector3(airMomentum.x, 0));
                     }
+
                     if (currAttack.frameData[currAttackFrame].canFall)
                     {
                         transform.Translate(new Vector3(0, airMomentum.y));
                     }
+
                     if (PreventClipping())
                     {
                         Land();
@@ -401,8 +552,6 @@ public class PlayerController : MonoBehaviour {
                 }
             }
         }
-
-
         CheckAnimation();
     }
 
@@ -412,6 +561,18 @@ public class PlayerController : MonoBehaviour {
         if (yPress || xPress)
         {
             StartJumpsquat();
+        }
+        else
+        if (lHold || rHold)
+        {
+            if (onStickBuff)
+            {
+                pam.UseDefensiveOption(this);
+            }
+            else
+            {
+                StartShielding();
+            }
         }
         else
         if (bPress)
@@ -425,19 +586,27 @@ public class PlayerController : MonoBehaviour {
         }
         else
         {
-
-            if (hori > horiThreshold)
+            if (hori > horiThreshold && onStickBuff)
             {
-                moveState = MoveStates.RIGHTWALK;
-                isFacingLeft = false;
-
+                StartRun();
             }
             else
-
-            if (hori < -horiThreshold)
+            if (hori < -horiThreshold && onStickBuff)
             {
-                moveState = MoveStates.LEFTWALK;
+                StartRun();
+            }    
+            else
+
+            if (hori > horiThreshold / 2)
+            {
+                isFacingLeft = false;
+                moveState = MoveStates.RIGHTWALK;
+            }
+            else
+            if (hori < -horiThreshold / 2)
+            {
                 isFacingLeft = true;
+                moveState = MoveStates.LEFTWALK;
             }
             else
             {
@@ -447,9 +616,68 @@ public class PlayerController : MonoBehaviour {
         }
     }
 
+    //Called while running (and first 4 frames of skidding)
+    void RunControl()
+    {
+        //checks direction
+        if (moveState == MoveStates.LEFTRUN)
+        {
+            isFacingLeft = true;
+        }else if (moveState == MoveStates.RIGHTRUN)
+        {
+            isFacingLeft = false;
+        }
+
+        if (yPress || xPress)
+        {
+            StartJumpsquat();
+        }
+
+        //skids if necessary
+        if (!(hori >= horiThreshold) && !(hori <= -horiThreshold) && moveState != MoveStates.SKID)
+        {
+            moveState = MoveStates.SKID;
+            lagCount = 15;
+        }
+        else
+
+        if (lHold || rHold)
+        {
+            if (onStickBuff)
+            {
+                pam.UseDefensiveOption(this);
+            }
+            else
+            {
+                StartShielding();
+            }
+        }
+        else
+        //allows dashdancing
+        if (moveState == MoveStates.LEFTRUN || moveState == MoveStates.SKID)
+        {
+            if (hori >= horiThreshold && runFrames <= 29)
+            {
+                groundMomentum = Vector3.zero;
+                StartRun();
+            }
+        }
+            
+        if (moveState == MoveStates.RIGHTRUN || moveState == MoveStates.SKID)
+        {
+            if (hori <= -horiThreshold && runFrames <= 29)
+            {
+                groundMomentum = Vector3.zero;
+                StartRun(true);
+            }
+
+        }
+    }
+
     //called every frame when the player is airborn and can act. Handles airborne physics
     void AirControl()
     {
+        canGrabLedge = true;
         //directional influence for drifting
         if (hori > 0.3F && airMomentum.x > -maxAirSpeed)
         {
@@ -480,7 +708,7 @@ public class PlayerController : MonoBehaviour {
                 }
             }
         }
-
+        
         //fast falling
         if (onStickDown && airMomentum.y < 0)
         {
@@ -497,7 +725,7 @@ public class PlayerController : MonoBehaviour {
         //if falling too fast, slow down
         if (airMomentum.y < -maxFallSpeed)
         {
-            airMomentum.y = -maxFallSpeed;
+            airMomentum.y += fallSpeed * 1.01F;
         }
 
         if (yPress || xPress)
@@ -505,6 +733,11 @@ public class PlayerController : MonoBehaviour {
             Jump(true);
         }
 
+        if (lPress || rPress)
+        {
+            Debug.Log("hi");
+            pam.UseDefensiveOption(this);
+        }
         if (bPress)
         {
             pam.UseSpecialAttack(this);
@@ -572,7 +805,7 @@ public class PlayerController : MonoBehaviour {
             airMomentum.y = -maxFallSpeed;
         }
 
-        if (PreventClipping() || isGrounded)
+        if ((PreventClipping() || isGrounded) && airMomentum.y <= 0)
         {
             Land();
             EndAttack();
@@ -644,7 +877,7 @@ public class PlayerController : MonoBehaviour {
                 //transform.Translate(new Vector3(0, airMomentum.y));
             }
         }
-        if ((PreventClipping()) && currAttack.groundCancel && currAttack.frameData[currAttackFrame].cancelable)
+        if (PreventClipping() && currAttack.groundCancel && currAttack.frameData[currAttackFrame].cancelable && airMomentum.y <= 0)
         {
             EndAttack();
             frameCancel = true;
@@ -655,9 +888,76 @@ public class PlayerController : MonoBehaviour {
         currAttackFrame++;
     }
 
+    //called every frame while ledge hanging and can act
+    void LedgeControl()
+    {
+        if (currLedge.ledgeDuration >= 30)
+        {
+            isInvincible = false;
+        }
+        if (onStick || yPress || xPress)
+        {
+            if (isFacingLeft)
+            {
+                //Ledge jump
+                if (vert >= vertThreshold || yPress || xPress)
+                {
+                    Jump();
+                }
+                //Ledge getup
+                else if (hori <= -horiThreshold)
+                {
+
+                }
+                //Ledge drop
+                else if (hori >= horiThreshold)
+                {
+                    moveState = MoveStates.AIRBORNE;
+                    return;
+                }
+                //Ledge fastfall
+                else if (vert <= -vertThreshold)
+                {
+                    moveState = MoveStates.AIRBORNE;
+                    fastFalling = true;
+                    CheckFastFall();
+                    airMomentum.y = -maxFallSpeed;
+                }
+            }
+            else
+            {
+                //Ledge Jump
+                if (vert >= vertThreshold || yPress || xPress)
+                {
+                    Jump();
+                }
+                //Ledge getup
+                else if (hori >= horiThreshold)
+                {
+
+                }
+                //Ledge drop
+                else if (hori <= -horiThreshold)
+                {
+                    moveState = MoveStates.AIRBORNE;
+                    return;
+                }
+                //Ledge Fastfall
+                else if (vert <= -vertThreshold)
+                {
+                    moveState = MoveStates.AIRBORNE;
+                    fastFalling = true;
+                    CheckFastFall();
+                    airMomentum.y = -maxFallSpeed;
+                }
+            }
+        }
+    }
+
     //called every frame that the player is in hitstun
     void HitStunControl()
     {
+        canGrabLedge = false;
         //accel downwards
         if (knockbackMomentum.y > -maxFallSpeed)
         {
@@ -667,7 +967,7 @@ public class PlayerController : MonoBehaviour {
         if (knockbackMomentum.y < -maxFallSpeed)
         {
 
-            knockbackMomentum.y += (fallSpeed) * 1.05F;
+            knockbackMomentum.y -= (fallSpeed) * 0.005F;
         }
 
         transform.position += knockbackMomentum;
@@ -678,7 +978,7 @@ public class PlayerController : MonoBehaviour {
             if (knockbackMomentum.y < -maxFallSpeed * 1.6)
             {
                 knockbackMomentum.y = -knockbackMomentum.y * 0.6F;
-                hitStunDuration += 10;
+                hitStunDuration += 5;
             }
             else
             {
@@ -709,17 +1009,66 @@ public class PlayerController : MonoBehaviour {
  
     }
 
-    //called when hitlag starts, signals end of hitlag
-    public virtual IEnumerator Hitlag(int duration, float knockbackValue, int hitstun, float angle, PlayerController sender = null, bool attacker = false)
+    void ShieldControl()
     {
-        if (frameCancel)
+        moveState = MoveStates.SHIELD;
+        ApplyTraction();
+        if (!lHold && !rHold)
+        {
+            moveState = MoveStates.SHIELDDROP;
+            lagCount = 6;
+        }
+        if (yPress || xPress)
+        {
+            StartJumpsquat();
+        }
+        else if (onStick && Mathf.Abs(hori) >= horiThreshold)
+        {
+            pam.UseDefensiveOption(this);
+        }
+        
+    }
+
+    void StartShielding()
+    {
+        moveState = MoveStates.SHIELD;
+        ShieldControl();
+        //shielder.GenerateShield();
+    }
+
+    Attack BufferMove()
+    {
+        Attack buffer = null;
+        //finish buffering -- grounded attacks, specials, jumps, rolls
+        if (bPress)
+        {
+
+        }
+        else
+        if (aPress)
+        {
+            buffer = BufferManager.BufferAOption(this);
+        }
+        else
+        if (onCStick)
+        {
+            buffer = BufferManager.BufferAOption(this, true);
+        }
+
+        return buffer;
+    }
+
+    //called when hitlag starts, signals end of hitlag
+    public virtual IEnumerator Hitlag(int duration, float knockbackValue, int hitstun, float angle, PlayerController sender = null, bool attacker = false, float damage = 0)
+    {
+        if (frameCancel && attacker)
         {
             Debug.Log("Frame Cancel? What a god");
             yield break;
         }
 
         //remembers the attackers state; 0 ATTACK, 1 AERIAL, 2 SPECIALMOVE
-        int returnID = 0;
+        returnID = 0;
         if (attacker)
         {
             if (moveState == MoveStates.ATTACK)
@@ -734,11 +1083,14 @@ public class PlayerController : MonoBehaviour {
             {
                 returnID = 2;
             }
+            else if (moveState == MoveStates.SHIELD)
+            {
+                returnID = 3;
+            }
         }
         else
         {
-            upBUsed = 0;
-            sideBUsed = 0;
+            RestoreSpecials();
             InterruptAttack();
         }
         moveState = MoveStates.HITLAG;
@@ -756,16 +1108,32 @@ public class PlayerController : MonoBehaviour {
                 {
                     case 0:
                         moveState = MoveStates.ATTACK;
+                        returnID = 0;
                         break;
 
                     case 1:
                         moveState = MoveStates.AERIAL;
+                        returnID = 0;
                         break;
 
                     case 2:
                         moveState = MoveStates.SPECIALMOVE;
+                        returnID = 0;
                         break;
 
+                }
+            }
+            else if (returnID == 3)
+            {
+                moveState = MoveStates.SHIELD;
+                returnID = 0;
+                if (angle > 90 && angle < 270)
+                {
+                    groundMomentum = new Vector3(-damage / 100, 0);
+                }
+                else if (angle < 90)
+                {
+                    groundMomentum = new Vector3(damage /100, 0);
                 }
             }
         }
@@ -783,7 +1151,7 @@ public class PlayerController : MonoBehaviour {
     //called when hitstun starts, signals end of hitstun
     public virtual IEnumerator Hitstun()
     {
-        if ((isGrounded || PreventClipping()) && Mathf.Abs(knockbackMomentum.y) < 0.15F)
+        if ((isGrounded || PreventClipping()) && Mathf.Abs(knockbackMomentum.y) < 0.12F)
         {
             knockbackMomentum.y = 0;
         }
@@ -811,6 +1179,8 @@ public class PlayerController : MonoBehaviour {
             inHitstun = false;
         }
 
+        knockbackMomentum = Vector3.zero;
+
     }
 
     //Returns true if clipping was prevented
@@ -836,6 +1206,18 @@ public class PlayerController : MonoBehaviour {
         lagCount = jumpFrames;
     }
 
+    void StartRun(bool left = false)
+    {
+        runFrames = 0;
+        if (left)
+        {
+            moveState = MoveStates.LEFTRUN;
+        } else
+        {
+            moveState = MoveStates.RIGHTRUN;
+        }
+    }
+
     //initiates the player's jump after jumpsquat ends
     void Jump(bool aerial = false)  
     {
@@ -847,6 +1229,8 @@ public class PlayerController : MonoBehaviour {
 
         if (aerial)
         {
+            framesSinceLedgeGrab = 0;
+
             if (jumpUsed == jumpCount)
             {
                 return;
@@ -872,7 +1256,6 @@ public class PlayerController : MonoBehaviour {
         }
         else
         {
-
             //determines if this is a shorthop or fullhop
             if (xHold || yHold)
             {
@@ -913,6 +1296,21 @@ public class PlayerController : MonoBehaviour {
             sideBUsed = 0;
             fastFalling = false;
         }
+    }
+
+    //called when the player grabs a ledge
+    public void GrabLedge(LedgeNode ledge)
+    {
+        currLedge = ledge;
+        isFacingLeft = ledge.ledgeGrabLeft;
+        moveState = PlayerController.MoveStates.LEDGEGRAB;
+        lagCount = 12;
+        isInvincible = true;
+        airMomentum = Vector3.zero;
+        jumpUsed = 0;
+        upBUsed = 0;
+        sideBUsed = 0;
+        fastFalling = false;
     }
 
     //Slows groundMomentum by traction
@@ -967,6 +1365,8 @@ public class PlayerController : MonoBehaviour {
 
         currAttack = null;
         currAttackFrame = 0;
+        MakeInvincible(true);
+        render.material = GameLoader.SetAlpha(render.material, 1);
     }
 
     //Used when an attack is cut short/canceled by something else.
@@ -982,8 +1382,11 @@ public class PlayerController : MonoBehaviour {
 
         currAttack = null;
         currAttackFrame = 0;
+        MakeInvincible(true);
+        render.material = GameLoader.SetAlpha(render.material, 1);
     }
 
+    //called to toggle invincibility
     public void MakeInvincible(bool reverse = false)
     {
         if (reverse)
@@ -996,6 +1399,18 @@ public class PlayerController : MonoBehaviour {
         }
 
         hurtBox.enabled = !isInvincible;
+    }
+
+    public void RestoreSpecials()
+    {
+        if (upBAttack.restoreOnHit)
+        {
+            upBUsed = 0;
+        }
+        if (sideBAttack.restoreOnHit || sideBAttackAerial.restoreOnHit)
+        {
+            sideBUsed = 0;
+        }
     }
 
     //returns true if the player is outside the bounds of the stage. Note that if the player is above the top of the stage, they must also be in HITSTUN
@@ -1022,6 +1437,15 @@ public class PlayerController : MonoBehaviour {
         knockbackMomentum = Vector3.zero;
         moveState = MoveStates.AIRBORNE;
 
+        foreach (Transform child in transform)
+        {
+            if (child.gameObject.tag == "Hitbox")
+            {
+                Destroy(child.gameObject);
+            }
+        }
+
+        ScoreManager.IncrementScore(playerNum);
     }
 
     //gets the values for all of the input variables from the input manager
@@ -1035,6 +1459,7 @@ public class PlayerController : MonoBehaviour {
 
                 onStickDown = InputManager.onStickDown;
                 onStick = InputManager.onStick;
+                onStickBuff = InputManager.onStickBuff;
                 lastStickX = InputManager.lastStickX;
                 lastStickY = InputManager.lastStickY;
 
@@ -1050,6 +1475,8 @@ public class PlayerController : MonoBehaviour {
                 xPress = InputManager.xPress;
                 yPress = InputManager.yPress;
                 zPress = InputManager.zPress;
+                lPress = InputManager.lPress;
+                rPress = InputManager.rPress;
 
                 aHold = InputManager.aHold;
                 lastA = InputManager.lastA;
@@ -1066,6 +1493,12 @@ public class PlayerController : MonoBehaviour {
                 zHold = InputManager.zHold;
                 lastZ = InputManager.lastZ;
 
+                lHold = InputManager.lHold;
+                lastL = InputManager.lastL;
+
+                rHold = InputManager.rHold;
+                lastR = InputManager.lastR;
+
                 break;
             case 2:
                 hori = InputManager.hori2;
@@ -1073,6 +1506,7 @@ public class PlayerController : MonoBehaviour {
 
                 onStickDown = InputManager.onStickDown2;
                 onStick = InputManager.onStick2;
+                onStickBuff = InputManager.onStickBuff2;
                 lastStickX = InputManager.lastStickX2;
                 lastStickY = InputManager.lastStickY2;
 
@@ -1088,6 +1522,8 @@ public class PlayerController : MonoBehaviour {
                 xPress = InputManager.xPress2;
                 yPress = InputManager.yPress2;
                 zPress = InputManager.zPress2;
+                lPress = InputManager.lPress2;
+                rPress = InputManager.rPress2;
 
                 aHold = InputManager.aHold2;
                 lastA = InputManager.lastA2;
@@ -1103,6 +1539,12 @@ public class PlayerController : MonoBehaviour {
 
                 zHold = InputManager.zHold2;
                 lastZ = InputManager.lastZ2;
+
+                lHold = InputManager.lHold2;
+                lastL = InputManager.lastL2;
+
+                rHold = InputManager.rHold2;
+                lastR = InputManager.lastR2;
 
                 break;
         }
@@ -1126,8 +1568,22 @@ public class PlayerController : MonoBehaviour {
 
         if ((moveState == MoveStates.HITLAG || moveState == MoveStates.HITSTUN) && currAttack == null)
         {
-            render.material = hitstunned;
-        } else
+            if (returnID == 3)
+            {
+                render.material = shieldStunned;
+            }
+            else
+            {
+                render.material = hitstunned;
+
+            }
+        }
+        else
+        if (moveState == MoveStates.SHIELD)
+        {
+            render.material = shielding;
+        }
+        else
         {
             render.material = standing;
         }
@@ -1136,10 +1592,10 @@ public class PlayerController : MonoBehaviour {
     public void PlaySound(AudioClip sound, float volume = 0.7F)
     {
         soundPlayer.clip = sound;
-        soundPlayer.pitch = Random.Range(0.8F, 1.4F);
+        soundPlayer.pitch = Random.Range(0.9F, 1.4F);
         soundPlayer.volume = volume;
         soundPlayer.Play();
     }
 
-    //TODO Combo counter, Improved animation support (switch to sprites), More movement options (dash, dodge), Wall Collisions, Ledges, Blocking, 
+    //TODO Implement better onStick (directional), Combo counter, Improved animation support (switch to sprites), Wall Collisions, Ledges 
 }

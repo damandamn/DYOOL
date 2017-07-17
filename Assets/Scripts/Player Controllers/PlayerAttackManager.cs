@@ -15,7 +15,7 @@ public class PlayerAttackManager : MonoBehaviour {
 
     public static List<List<Attack>> nullAttackLists = new List<List<Attack>>();
 
-    //checks which A attack use
+    //Functions which decide which attack should be used
     public void UseAAttack(PlayerController user, bool isCStick)
     {
         if (isCStick)
@@ -289,7 +289,13 @@ public class PlayerAttackManager : MonoBehaviour {
         //stick is neutral
         if (Mathf.Abs(user.vert) < user.vertThreshold && Mathf.Abs(user.hori) < user.horiThreshold)
         {
-            StartAttack(user, user.neutralBAttack);
+            if (user.isGrounded)
+            {
+                StartAttack(user, user.neutralBAttack);
+            } else
+            {
+                StartAttack(user, user.neutralBAttackAerial);
+            }
         }
         else
         //stick is up
@@ -341,6 +347,48 @@ public class PlayerAttackManager : MonoBehaviour {
                 }
             }
         }
+    }
+
+    public void UseDefensiveOption(PlayerController user)
+    {
+        if (user.isGrounded)
+        {
+            if (Mathf.Abs(user.hori) > user.horiThreshold && Mathf.Abs(user.vert) > user.vertThreshold)
+            {
+                return;
+            }
+            if (user.isFacingLeft) {
+                if (user.hori >= user.horiThreshold)
+                {
+                    StartAttack(user, user.backDash);
+                } else
+                if (user.hori <= -user.horiThreshold)
+                {
+                    StartAttack(user, user.dash);
+                }
+            } else
+            {
+                if (user.hori >= user.horiThreshold)
+                {
+                    StartAttack(user, user.dash);
+                }
+                else
+                if (user.hori <= -user.horiThreshold)
+                {
+                    StartAttack(user, user.backDash);
+                }
+            }
+        }
+        else
+        {
+            StartAttack(user, user.airdodge);
+        }
+    }
+
+    public void UseBufferedOption(PlayerController user, Attack option)
+    {
+        StartAttack(user, option);
+        user.bufferedOption = null;
     }
 
     //initiates a specified attack
@@ -407,6 +455,8 @@ public class PlayerAttackManager : MonoBehaviour {
     {
         MoveFrame attackFrame = attack.frameData[frame];
 
+        user.canGrabLedge = attackFrame.ledgeGrab;
+
         //runs on frames that play audio
         if (attackFrame.playSound && user.moveState != PlayerController.MoveStates.HITLAG)
         {
@@ -434,52 +484,67 @@ public class PlayerAttackManager : MonoBehaviour {
             }
         }
 
+        //Sets user's transparency
+        //later
+
+        //user.render.material = GameLoader.SetAlpha(user.render.material, attackFrame.frameAlpha);
+
         //moves the user by the frames specified vector, if any
-        if ((attackFrame.userGroundMovement != Vector3.zero || attackFrame.userMovement != Vector3.zero) && user.moveState != PlayerController.MoveStates.HITLAG)
+        if ((attackFrame.userMovement != Vector3.zero || attackFrame.userMomentum != Vector3.zero || attackFrame.userTranslation != Vector3.zero) && user.moveState != PlayerController.MoveStates.HITLAG)
         { 
             Vector3 tempMovement;
+            Vector3 tempMomentum;
+            Vector3 tempTranslation;
 
-            if (user.isGrounded && attackFrame.userMovement.y <= 0)
+            if (user.isFacingLeft)
             {
-                if (user.isFacingLeft)
-                {
-                    tempMovement = new Vector3(attackFrame.userGroundMovement.x, attackFrame.userGroundMovement.y);
-                }
-                else
-                {
-                    tempMovement = new Vector3(-attackFrame.userGroundMovement.x, attackFrame.userGroundMovement.y);
-                }
-            } else
+                tempMovement = attackFrame.userMovement;
+                tempMomentum = attackFrame.userMomentum;
+                tempTranslation = attackFrame.userTranslation;
+            }
+            else
             {
-                if (user.isFacingLeft)
-                {
-                    tempMovement = new Vector3(attackFrame.userMovement.x, attackFrame.userMovement.y);
-                }
-                else
-                {
-                    tempMovement = new Vector3(-attackFrame.userMovement.x, attackFrame.userMovement.y);
-                }
+                tempMovement = new Vector3(-attackFrame.userMovement.x, attackFrame.userMovement.y);
+                tempMomentum = new Vector3(-attackFrame.userMomentum.x, attackFrame.userMomentum.y);
+                tempTranslation = new Vector3(-attackFrame.userTranslation.x, attackFrame.userTranslation.y);
+            }
+
+            if (user.topColl)
+            {
+                tempMovement.y = GameData.ClampFloat(tempMovement.y, true);
+                tempMomentum.y = GameData.ClampFloat(tempMomentum.y, true);
+                tempTranslation.y = GameData.ClampFloat(tempTranslation.y, true);
+            }
+            if (user.leftColl)
+            {
+                tempMovement.x = GameData.ClampFloat(tempMovement.x);
+                tempMomentum.x = GameData.ClampFloat(tempMomentum.x);
+                tempTranslation.x = GameData.ClampFloat(tempTranslation.x);
+            }
+            if (user.rightColl)
+            {
+                tempMovement.x = GameData.ClampFloat(tempMovement.x, true);
+                tempMomentum.x = GameData.ClampFloat(tempMomentum.x, true);
+                tempTranslation.x = GameData.ClampFloat(tempTranslation.x, true);
             }
 
             if (user.isGrounded)
             {
-                user.transform.Translate(tempMovement);
+                if (attackFrame.setMomentum)
+                {
+                    user.groundMomentum = tempMovement;
+                }
+                user.groundMomentum += tempMomentum;
+            } else
+            {
+                if (attackFrame.setMomentum)
+                {
+                    user.airMomentum = tempMovement;
+                }
+                user.airMomentum += tempMomentum;
             }
 
-            if (attack.aerial) {
-                user.airMomentum = tempMovement;
-            }
-            else
-            if (attack.special)
-            {
-                if (attackFrame.setAirMomentum)
-                {
-                    user.transform.Translate(tempMovement);
-                } else
-                {
-                    user.airMomentum += tempMovement;
-                }
-            }
+            user.transform.position += tempTranslation;
             
         }
         
@@ -577,18 +642,6 @@ public class PlayerAttackManager : MonoBehaviour {
         }
     }
 
-    public void PrioritizeHit(HitBox hit)
-    {
-        hitCount++;
-        if (!hitThisFrame)
-        {
-            hitThisFrame = true;
-            hits = new List<HitBox>();
-            StartCoroutine(SendHit());
-        }
-        hits.Add(hit);
-    }
-
     public void DestroyHitboxes()
     {
         try
@@ -606,6 +659,18 @@ public class PlayerAttackManager : MonoBehaviour {
     void DestroyHitbox(HitBox hitbox)
     {
         Destroy(hitbox.gameObject);
+    }
+
+    public void PrioritizeHit(HitBox hit)
+    {
+        hitCount++;
+        if (!hitThisFrame)
+        {
+            hitThisFrame = true;
+            hits = new List<HitBox>();
+            StartCoroutine(SendHit());
+        }
+        hits.Add(hit);
     }
 
     IEnumerator SendHit()
@@ -628,7 +693,6 @@ public class PlayerAttackManager : MonoBehaviour {
         {
             if (sender.hitboxType == "Collateral")
             {
-                Debug.Log("hi");
                 foreach (Transform child in sender.transform.parent)
                 {
                     Destroy(child.gameObject);
@@ -643,6 +707,7 @@ public class PlayerAttackManager : MonoBehaviour {
                 } catch { }
             }
         }
+
         if (sender.hitSound != null)
         {
             sender.PlaySound();

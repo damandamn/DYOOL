@@ -8,6 +8,7 @@ public class PlayerGroundHandler : MonoBehaviour {
     public float platHeight;
     public Collider col;
 
+    public float heightCast;
     public LayerMask platforms;
 
     private void Start()
@@ -31,7 +32,7 @@ public class PlayerGroundHandler : MonoBehaviour {
     public Platform GetCurrentPlat()
     {
         RaycastHit hit;
-        Ray ray = new Ray(transform.position - new Vector3(0, 1.4F), Vector3.down);
+        Ray ray = new Ray(transform.position - new Vector3(0, heightCast), Vector3.down);
 
         if (Physics.Raycast(ray, out hit, 40, platforms))
         {

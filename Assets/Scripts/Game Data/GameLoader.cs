@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+
 
 public class GameLoader : MonoBehaviour {
 
@@ -19,7 +21,10 @@ public class GameLoader : MonoBehaviour {
 
     public Material marshmallowStand;
     public Material marshmallowHitstun;
+    public Material marshmallowShield;
+    public Material marshmallowShieldstun;
 
+    public static GameObject shieldBox;
     //Example Hitboxes
     public List<GameObject> jabHitboxes;
     public List<GameObject> fTiltHitboxes;
@@ -34,13 +39,16 @@ public class GameLoader : MonoBehaviour {
 
     public List<GameObject> neutralBHitboxes;
     public List<GameObject> exampleProjectile;
+    public List<GameObject> exampleAerialProjectile;
     public List<GameObject> upBHitboxes;
 
     //Morganis Hitboxes
     public List<GameObject> morganisJabHitboxes;
     public List<GameObject> morganisFTiltHitboxes;
+    public List<GameObject> morganisDTiltHitboxes;
     public List<GameObject> morganisNAirHitboxes;
     public List<GameObject> morganisFAirHitboxes;
+    public List<GameObject> morganisDAirHitboxes;
     public List<GameObject> morganisUAirHitboxes;
     public List<GameObject> morganisBAirHitboxes;
 
@@ -56,9 +64,9 @@ public class GameLoader : MonoBehaviour {
         hitmanager = GetComponent<HitManager>();
         stagebuilder = GetComponent<StageBuilder>();
 
-        player1 = SpawnExamplePlayer();
+        player1 = SpawnMorganis();
         player1.playerNum = 1;
-        player2 = SpawnMorganis(new Vector3(5, -2.25F));
+        player2 = SpawnExamplePlayer(new Vector3(5, -2.25F));
         player2.playerNum = 2;
 
         PlayerAttackManager.nullAttackLists.Add(player1.nullify);
@@ -79,14 +87,20 @@ public class GameLoader : MonoBehaviour {
     void LoadResources()
     {
         GameData.hitboxRenderPrefab = (GameObject)Resources.Load("Prefabs/HitboxRenderPrefab");
+        GameData.ledgePrefab = (GameObject)Resources.Load("Prefabs/Ledge");
 
         AudioContainer.swordDraw1 = (AudioClip)Resources.Load("Audio/Sound Effects/swordDraw1");
         AudioContainer.swordDraw2 = (AudioClip)Resources.Load("Audio/Sound Effects/swordDraw2");
+
         AudioContainer.whiff1 = (AudioClip)Resources.Load("Audio/Sound Effects/whiff1");
         AudioContainer.whiff2 = (AudioClip)Resources.Load("Audio/Sound Effects/whiff2");
+        AudioContainer.whiff3 = (AudioClip)Resources.Load("Audio/Sound Effects/whiff3");
+        AudioContainer.whiff4 = (AudioClip)Resources.Load("Audio/Sound Effects/whiff4");
+
         AudioContainer.swordWhiff1 = (AudioClip)Resources.Load("Audio/Sound Effects/swordWhiff1");
         AudioContainer.swordWhiff2 = (AudioClip)Resources.Load("Audio/Sound Effects/swordWhiff2");
         AudioContainer.ringing1 = (AudioClip)Resources.Load("Audio/Sound Effects/ringing1");
+        AudioContainer.block1 = (AudioClip)Resources.Load("Audio/Sound Effects/block1");
 
     }
 
@@ -125,12 +139,23 @@ public class GameLoader : MonoBehaviour {
 
         player.upBAttack = GameData.CreateExampleUpBAttack(upBHitboxes);
         player.neutralBAttack = GameData.CreateExampleNeutralBAttack(neutralBHitboxes);
-        //player.neutralBAttackAerial = GameData.CreateAerialExampleProjectileAttack(exampleProjectile);
+        player.neutralBAttackAerial = GameData.CreateExampleNeutralBAttack(neutralBHitboxes);
         player.sideBAttack = GameData.CreateGroundedExampleProjectileAttack(exampleProjectile);
-        player.sideBAttackAerial = GameData.CreateAerialExampleProjectileAttack(exampleProjectile);
+        player.sideBAttackAerial = GameData.CreateAerialExampleProjectileAttack(exampleAerialProjectile);
+
+        player.airdodge = GameData.CreateAirdodge(jabHitboxes);
+        player.dash = GameData.CreateDash(jabHitboxes);
+        player.backDash = GameData.CreateBackDash(jabHitboxes);
 
         player.standing = marshmallowStand;
         player.hitstunned = marshmallowHitstun;
+        player.shielding = marshmallowShield;
+        player.shieldStunned = marshmallowShieldstun;
+
+        foreach (EnvironmentCollision coll in player.GetComponentsInChildren<EnvironmentCollision>())
+        {
+            coll.user = player; 
+        }
 
         return player;
     }
@@ -152,10 +177,10 @@ public class GameLoader : MonoBehaviour {
         player.jabAttack = GameData.CreateMorganisJabAttack(morganisJabHitboxes);
         player.fTiltAttack = GameData.CreateMorganisFTiltAttack(morganisFTiltHitboxes);
         player.uTiltAttack = GameData.CreateExampleUTiltAttack(uTiltHitboxes);
-        player.dTiltAttack = GameData.CreateExampleDTiltAttack(dTiltHitboxes);
+        player.dTiltAttack = GameData.CreateMorganisDTiltAttack(morganisDTiltHitboxes);
 
         player.nAirAttack = GameData.CreateMorganisNAirAttack(morganisNAirHitboxes);
-        player.dAirAttack = GameData.CreateExampleDAirAttack(dAirHitboxes);
+        player.dAirAttack = GameData.CreateMorganisDAirAttack(morganisDAirHitboxes);
         player.uAirAttack = GameData.CreateMorganisUAirAttack(morganisUAirHitboxes);
         player.fAirAttack = GameData.CreateMorganisFAirAttack(morganisFAirHitboxes);
         player.bAirAttack = GameData.CreateMorganisBAirAttack(morganisBAirHitboxes);
@@ -165,9 +190,28 @@ public class GameLoader : MonoBehaviour {
         player.neutralBAttack = GameData.CreateMorganisProjectileAttack(morganisProjectile);
         player.sideBAttack = GameData.CreateMorganisSideBAttack(morganisSideBHitboxes);
 
+        player.airdodge = GameData.CreateAirdodge(jabHitboxes);
+        player.dash = GameData.CreateDash(jabHitboxes);
+        player.backDash = GameData.CreateBackDash(jabHitboxes);
+
         player.standing = marshmallowStand;
         player.hitstunned = marshmallowHitstun;
+        player.shielding = marshmallowShield;
+        player.shieldStunned = marshmallowShieldstun;
+
+        foreach (EnvironmentCollision coll in player.GetComponentsInChildren<EnvironmentCollision>())
+        {
+            coll.user = player;
+        }
 
         return player;
+    }
+
+    public static void EndGame(int playerNum)
+    {
+        ScoreManager.player1Score = 0;
+        ScoreManager.player2Score = 0;
+        Debug.Log("Player " + playerNum + " Wins!");
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 }

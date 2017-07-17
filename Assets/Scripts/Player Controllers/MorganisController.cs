@@ -4,10 +4,13 @@ using UnityEngine;
 
 public class MorganisController : PlayerController {
 
+    Vector3 morganisScale = new Vector3(1.2F, 2.8F, 0);
+
     protected float morganisWalkSpeed = 0.14F;
+    protected float morganisRunSpeed = 0.24F;
     protected float morganisTraction = 0.01F;
-    protected float morganisWalkAccel = 0.012F;
-    protected float morganisDashAccel = 0.012F;
+    protected float morganisWalkAccel = 0.014F;
+    protected float morganisDashAccel = 0.048F;
 
     protected float morganisMaxAirSpeed = 0.065F;
     protected float morganisAirAccel = 0.005F;
@@ -31,10 +34,12 @@ public class MorganisController : PlayerController {
         soundPlayer = GetComponent<AudioSource>();
 
         //Sets PlayerController variables to character specifics
-        walkSpeed = morganisWalkSpeed;
+        basePlayerScale = morganisScale;
+        baseWalkSpeed = morganisWalkSpeed;
+        runSpeed = morganisRunSpeed;
         traction = morganisTraction;
         walkAccel = morganisWalkAccel;
-        dashAccel = morganisDashAccel;
+        runAccel = morganisDashAccel;
 
         maxAirSpeed = morganisMaxAirSpeed;
         airAccel = morganisAirAccel;
@@ -50,60 +55,5 @@ public class MorganisController : PlayerController {
         turnFrames = morganisTurnFrames;
 }
 
-    public override IEnumerator Hitlag(int duration, float knockbackValue, int hitstun, float angle, PlayerController sender = null, bool attacker = false)
-    {
-        if (frameCancel)
-        {
-            yield break;
-        }
-
-        if (!attacker)
-        {
-            upBUsed = 0;
-        }
-
-        //remembers whether the attacker was using an aerial or not
-        bool aerialReturn = false;
-        if (attacker)
-        {
-            if (moveState == MoveStates.AERIAL)
-            {
-                aerialReturn = true;
-            }
-        }
-        else
-        {
-            InterruptAttack();
-        }
-        moveState = MoveStates.HITLAG;
-
-        for (int i = 0; i < duration; i++)
-        {
-            yield return null;
-        }
-
-        if (attacker)
-        {
-            if (currAttack != null)
-            {
-                if (aerialReturn)
-                {
-                    moveState = MoveStates.AERIAL;
-                }
-                else
-                {
-                    moveState = MoveStates.ATTACK;
-                }
-            }
-        }
-        else
-        {
-            //begin launch
-            knockbackMomentum = GameLoader.hitmanager.CalculateLaunch(knockbackValue, angle, fallSpeed, sender);
-            hitStunDuration = hitstun;
-
-            inHitstun = false;
-            moveState = MoveStates.HITSTUN;
-        }
-    }
+   
 }
